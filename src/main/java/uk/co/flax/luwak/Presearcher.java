@@ -3,6 +3,7 @@ package uk.co.flax.luwak;
 import java.util.Map;
 
 import org.apache.lucene.document.Document;
+import org.apache.lucene.index.LeafReader;
 import org.apache.lucene.search.Query;
 import uk.co.flax.luwak.presearcher.PerFieldTokenFilter;
 
@@ -37,13 +38,13 @@ import uk.co.flax.luwak.presearcher.PerFieldTokenFilter;
 public abstract class Presearcher {
 
     /**
-     * Build a query for a Monitor's queryindex from an InputDocument.
-     * @param inputDocument the document to query for
+     * Build a query for a Monitor's queryindex from a LeafReader over a document index.
+     * @param reader a LeafReader over the input document index
      * @param filter a PerFieldTokenFilter passed in by the monitor, to aid
      *               in removing unnecessary clauses
      * @return a Query to run over a Monitor's queryindex
      */
-    public abstract Query buildQuery(InputDocument inputDocument, PerFieldTokenFilter filter);
+    public abstract Query buildQuery(LeafReader reader, PerFieldTokenFilter filter);
 
     /**
      * Build a lucene Document to index the query in a Monitor's queryindex

@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
+import org.apache.lucene.index.LeafReader;
 import org.apache.lucene.search.BooleanQuery;
 import org.junit.Test;
 import uk.co.flax.luwak.matchers.SimpleMatcher;
@@ -42,7 +43,7 @@ public class TestTermsEnumFilter {
                 .addField("title", "but this text should be ignored", ANALYZER)
                 .build();
 
-        BooleanQuery query = (BooleanQuery) monitor.buildQuery(doc);
+        BooleanQuery query = (BooleanQuery) monitor.buildQuery((LeafReader)doc.getSearcher().getIndexReader());
 
         assertThat(query.clauses()).hasSize(2);     // text:world __anytokenfield:__ANYTOKEN__
         assertThat(monitor.match(doc, SimpleMatcher.FACTORY).getMatchCount()).isEqualTo(1);

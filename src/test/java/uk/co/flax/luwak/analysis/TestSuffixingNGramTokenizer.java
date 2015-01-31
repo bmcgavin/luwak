@@ -1,17 +1,12 @@
 package uk.co.flax.luwak.analysis;
 
-import java.io.File;
 import java.io.IOException;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.Tokenizer;
-import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
 import org.apache.lucene.analysis.core.WhitespaceTokenizer;
 import org.junit.Test;
-import uk.co.flax.luwak.InputDocument;
 
 import static uk.co.flax.luwak.util.TokenStreamAssert.assertThat;
 
@@ -123,30 +118,6 @@ public class TestSuffixingNGramTokenizer {
                 .nextEquals("alongtermthatshouldntbengrammed")
                 .nextEquals("ANY")
                 .isExhausted();
-
-    }
-
-    public static void main(String... args) throws IOException {
-
-        String text = Files.toString(new File("src/test/resources/gutenberg/README"), Charsets.UTF_8);
-        InputDocument doc = InputDocument.builder("1")
-                .addField("f", text, new WhitespaceAnalyzer()).build();
-
-        for (int i = 0; i < 50; i++) {
-
-            long time = System.currentTimeMillis();
-
-            TokenStream ts = new TermsEnumTokenStream(doc.asAtomicReader().fields().terms("f").iterator(null));
-            ts = new SuffixingNGramTokenFilter(ts, "XX", "__WILDCARD__", 20);
-            //ts = new DuplicateRemovalTokenFilter(ts);
-            int tokencount = 0;
-            ts.reset();
-            while (ts.incrementToken()) {
-                tokencount++;
-            }
-
-            System.out.println(tokencount + " tokens in " + (System.currentTimeMillis() - time) + " ms");
-        }
 
     }
 

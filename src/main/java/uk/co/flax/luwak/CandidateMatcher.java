@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.lucene.index.LeafReader;
+import org.apache.lucene.index.SlowCompositeReaderWrapper;
 import org.apache.lucene.search.Query;
 
 /**
@@ -84,13 +86,6 @@ public abstract class CandidateMatcher<T extends QueryMatch> {
         this.errors.add(e);
     }
 
-    /**
-     * @return the InputDocument for this CandidateMatcher
-     */
-    public InputDocument getDocument() {
-        return doc;
-    }
-
     public void finish(long buildTime, int queryCount) {
         this.queryBuildTime = buildTime;
         this.queriesRun = queryCount;
@@ -114,5 +109,9 @@ public abstract class CandidateMatcher<T extends QueryMatch> {
 
     public Matches<T> getMatches() {
         return new Matches<>(doc.getId(), matches, errors, queryBuildTime, searchTime, queriesRun, slowlog.toString());
+    }
+
+    public LeafReader getIndexReader() throws IOException {
+        return SlowCompositeReaderWrapper.wrap(doc.getSearcher().getIndexReader());
     }
 }

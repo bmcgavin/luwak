@@ -8,6 +8,7 @@ import org.apache.lucene.analysis.miscellaneous.EmptyTokenStream;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.StringField;
+import org.apache.lucene.index.LeafReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.Terms;
 import org.apache.lucene.index.TermsEnum;
@@ -57,9 +58,9 @@ public class FieldFilterPresearcherComponent extends PresearcherComponent {
 
 
     @Override
-    public Query adjustPresearcherQuery(InputDocument doc, Query presearcherQuery) throws IOException {
+    public Query adjustPresearcherQuery(LeafReader reader, Query presearcherQuery) throws IOException {
 
-        Query filterClause = buildFilterClause(doc);
+        Query filterClause = buildFilterClause(reader);
         if (filterClause == null)
             return presearcherQuery;
 
@@ -69,9 +70,9 @@ public class FieldFilterPresearcherComponent extends PresearcherComponent {
         return bq;
     }
 
-    private Query buildFilterClause(InputDocument doc) throws IOException {
+    private Query buildFilterClause(LeafReader reader) throws IOException {
 
-        Terms terms = doc.asAtomicReader().fields().terms(field);
+        Terms terms = reader.fields().terms(field);
         if (terms == null)
             return null;
 

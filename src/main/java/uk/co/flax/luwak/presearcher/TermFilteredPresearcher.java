@@ -30,7 +30,6 @@ import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
-import uk.co.flax.luwak.InputDocument;
 import uk.co.flax.luwak.Presearcher;
 import uk.co.flax.luwak.analysis.TermsEnumTokenStream;
 import uk.co.flax.luwak.termextractor.QueryAnalyzer;
@@ -73,9 +72,9 @@ public class TermFilteredPresearcher extends Presearcher {
     }
 
     @Override
-    public final Query buildQuery(InputDocument doc, PerFieldTokenFilter filter) {
+    public final Query buildQuery(LeafReader reader, PerFieldTokenFilter filter) {
         try {
-            LeafReader reader = doc.asAtomicReader();
+
             DocumentQueryBuilder queryBuilder = getQueryBuilder();
 
             for (String field : reader.fields()) {
@@ -100,7 +99,7 @@ public class TermFilteredPresearcher extends Presearcher {
             presearcherQuery = bq;
 
             for (PresearcherComponent component : components) {
-                presearcherQuery = component.adjustPresearcherQuery(doc, presearcherQuery);
+                presearcherQuery = component.adjustPresearcherQuery(reader, presearcherQuery);
             }
 
             return presearcherQuery;
