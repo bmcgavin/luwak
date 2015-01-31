@@ -101,7 +101,7 @@ public class TestMultipassPresearcher extends PresearcherTestBase {
                 InputDocument doc = InputDocument.builder("doc1")
                         .addField("f", "this is a test document", new WhitespaceAnalyzer()).build();
 
-                BooleanQuery q = (BooleanQuery) presearcher.buildQuery(doc, ctx);
+                BooleanQuery q = (BooleanQuery) presearcher.buildQuery((LeafReader)doc.getSearcher().getIndexReader(), ctx);
                 IndexSearcher searcher = new IndexSearcher(ctx);
                 Weight w = searcher.createNormalizedWeight(q, true);
 

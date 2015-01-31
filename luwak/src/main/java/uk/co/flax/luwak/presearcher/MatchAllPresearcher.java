@@ -20,9 +20,9 @@ import java.util.Map;
 
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.IndexReaderContext;
+import org.apache.lucene.index.LeafReader;
 import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.Query;
-import uk.co.flax.luwak.InputDocument;
 import uk.co.flax.luwak.Presearcher;
 
 /**
@@ -36,7 +36,7 @@ public class MatchAllPresearcher extends Presearcher {
     }
 
     @Override
-    public Query buildQuery(InputDocument doc, IndexReaderContext ctx) {
+    public Query buildQuery(LeafReader reader, IndexReaderContext ctx) {
         return new MatchAllDocsQuery();
     }
 

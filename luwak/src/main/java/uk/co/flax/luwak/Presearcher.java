@@ -4,6 +4,7 @@ import java.util.Map;
 
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.IndexReaderContext;
+import org.apache.lucene.index.LeafReader;
 import org.apache.lucene.search.Query;
 
 /**
@@ -37,12 +38,12 @@ import org.apache.lucene.search.Query;
 public abstract class Presearcher {
 
     /**
-     * Build a query for a Monitor's queryindex from an InputDocument.
-     * @param inputDocument the document to query for
+     * Build a query for a Monitor's queryindex from a LeafReader over a document index.
+     * @param reader a {@link LeafReader} over the input document index
      * @param queryIndexContext the IndexReaderContext of the Monitor's queryindex
      * @return a Query to run over a Monitor's queryindex
      */
-    public abstract Query buildQuery(InputDocument inputDocument, IndexReaderContext queryIndexContext);
+    public abstract Query buildQuery(LeafReader reader, IndexReaderContext queryIndexContext);
 
     /**
      * Build a lucene Document to index the query in a Monitor's queryindex

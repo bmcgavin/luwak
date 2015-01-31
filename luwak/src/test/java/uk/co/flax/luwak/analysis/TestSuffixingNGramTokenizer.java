@@ -10,6 +10,8 @@ import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.Tokenizer;
 import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
 import org.apache.lucene.analysis.core.WhitespaceTokenizer;
+import org.apache.lucene.index.LeafReader;
+import org.apache.lucene.index.SlowCompositeReaderWrapper;
 import org.junit.Test;
 import uk.co.flax.luwak.InputDocument;
 
@@ -136,8 +138,9 @@ public class TestSuffixingNGramTokenizer {
 
             long time = System.currentTimeMillis();
 
-            // Cannot use try-with-resources here as we assign to ts in the block. 
-            TokenStream ts = new TermsEnumTokenStream(doc.asAtomicReader().fields().terms("f").iterator());
+            // Cannot use try-with-resources here as we assign to ts in the block.
+            LeafReader reader = SlowCompositeReaderWrapper.wrap(doc.getSearcher().getIndexReader());
+            TokenStream ts = new TermsEnumTokenStream(reader.fields().terms("f").iterator());
             try {
                 ts = new SuffixingNGramTokenFilter(ts, "XX", "__WILDCARD__", 20);
                 //ts = new DuplicateRemovalTokenFilter(ts);

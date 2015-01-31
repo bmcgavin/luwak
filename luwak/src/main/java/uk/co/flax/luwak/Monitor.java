@@ -465,7 +465,7 @@ public class Monitor implements Closeable {
         IndexSearcher searcher = null;
         try {
             searcher = manager.acquire();
-            Query query = presearcher.buildQuery(matcher.getDocument(), searcher.getTopReaderContext());
+            Query query = presearcher.buildQuery(matcher.getIndexReader(), searcher.getTopReaderContext());
             buildTime = (System.nanoTime() - buildTime) / 1000000;
             collector.setQueryMap(this.queries);
             searcher.search(query, collector);
@@ -475,6 +475,18 @@ public class Monitor implements Closeable {
         }
         matcher.finish(buildTime, collector.getQueryCount());
 
+    }
+
+    // for testing
+    Query buildQuery(LeafReader reader) throws IOException {
+        IndexSearcher searcher = null;
+        try {
+            searcher = manager.acquire();
+            return presearcher.buildQuery(reader, searcher.getTopReaderContext());
+        }
+        finally {
+            manager.release(searcher);
+        }
     }
 
     private void match(Query query, MonitorQueryCollector collector) throws IOException {
@@ -553,7 +565,9 @@ public class Monitor implements Closeable {
             PresearcherMatchCollector<T> collector = new PresearcherMatchCollector<>(factory.createMatcher(doc));
             collector.setQueryMap(queries);
             Query presearcherQuery = new ForceNoBulkScoringQuery(
-                    SpanRewriter.INSTANCE.rewrite(presearcher.buildQuery(doc, searcher.getTopReaderContext()))
+                    SpanRewriter.INSTANCE.rewrite(
+                            presearcher.buildQuery(
+                                    SlowCompositeReaderWrapper.wrap(doc.getSearcher().getIndexReader()), searcher.getTopReaderContext()))
             );
             searcher.search(presearcherQuery, collector);
             return collector.getMatches();
