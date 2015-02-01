@@ -68,10 +68,6 @@ public abstract class CandidateMatcher<T extends QueryMatch> {
      */
     public abstract void matchQuery(String queryId, Query matchQuery, Query highlightQuery) throws IOException;
 
-    protected void addMatch(String queryId, int docId, T match) {
-        addMatch(queryId, docs.resolveDocId(docId), match);
-    }
-
     private void addMatch(String queryId, String docId, T match) {
         MatchHolder<T> docMatches = matches.get(docId);
         if (docMatches == null) {

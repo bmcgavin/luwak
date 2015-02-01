@@ -32,6 +32,7 @@ public class DocumentBatch implements Closeable {
     private final IndexWriter writer;
 
     private String[] docIds = null;
+    private LeafReader reader = null;
 
     public DocumentBatch(Directory directory, Analyzer analyzer) throws IOException {
         this.directory = directory;
@@ -48,10 +49,13 @@ public class DocumentBatch implements Closeable {
         this.writer.addDocument(doc.getDocument());
     }
 
-    public LeafReader getIndexReader() throws IOException {
+    public synchronized LeafReader getIndexReader() throws IOException {
+
+        if (reader != null)
+            return reader;
 
         writer.commit();
-        LeafReader reader = SlowCompositeReaderWrapper.wrap(DirectoryReader.open(directory));
+        reader = SlowCompositeReaderWrapper.wrap(DirectoryReader.open(directory));
         assert reader != null;
 
         docIds = new String[reader.maxDoc()];

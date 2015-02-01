@@ -61,12 +61,12 @@ public abstract class CollectingMatcher<T extends QueryMatch> extends CandidateM
     /**
      * Called when a query matches an InputDocument
      * @param queryId the query ID
-     * @param doc the docId for the InputDocument in the DocumentBatch
+     * @param docId the docId for the InputDocument in the DocumentBatch
      * @param scorer the Scorer for this query
      * @return a match object
      * @throws IOException
      */
-    protected abstract T doMatch(String queryId, int doc, Scorer scorer) throws IOException;
+    protected abstract T doMatch(String queryId, String docId, Scorer scorer) throws IOException;
 
     protected class MatchCollector implements Collector {
 
@@ -94,7 +94,7 @@ public abstract class CollectingMatcher<T extends QueryMatch> extends CandidateM
 
             @Override
             public void collect(int doc) throws IOException {
-                match = doMatch(queryId, doc, scorer);
+                match = doMatch(queryId, docs.resolveDocId(doc), scorer);
                 if (match != null)
                     addMatch(match);
             }

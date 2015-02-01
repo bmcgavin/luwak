@@ -34,8 +34,8 @@ public class SimpleMatcher extends CollectingMatcher<QueryMatch> {
     }
 
     @Override
-    protected QueryMatch doMatch(String queryId, int doc, Scorer scorer) throws IOException {
-        return new QueryMatch(queryId, docs.resolveDocId(doc));
+    protected QueryMatch doMatch(String queryId, String docId, Scorer scorer) throws IOException {
+        return new QueryMatch(queryId, docId);
     }
 
     public static final MatcherFactory<QueryMatch> FACTORY = new MatcherFactory<QueryMatch>() {

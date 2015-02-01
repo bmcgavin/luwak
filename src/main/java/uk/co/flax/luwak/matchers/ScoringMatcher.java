@@ -32,10 +32,10 @@ public class ScoringMatcher extends CollectingMatcher<ScoringMatch> {
     }
 
     @Override
-    protected ScoringMatch doMatch(String queryId, int doc, Scorer scorer) throws IOException {
+    protected ScoringMatch doMatch(String queryId, String docId, Scorer scorer) throws IOException {
         float score = scorer.score();
         if (score > 0)
-            return new ScoringMatch(queryId, docs.resolveDocId(doc), score);
+            return new ScoringMatch(queryId, docId, score);
         return null;
     }
 
