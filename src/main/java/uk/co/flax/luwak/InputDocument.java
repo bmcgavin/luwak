@@ -87,7 +87,7 @@ public class InputDocument {
          * @return the Builder object
          */
         public Builder addField(String field, String text) {
-            doc.luceneDocument.add(new TextField(field, text, Field.Store.YES));
+            doc.luceneDocument.add(new Field(field, text, FIELD_TYPE));
             return this;
         }
 

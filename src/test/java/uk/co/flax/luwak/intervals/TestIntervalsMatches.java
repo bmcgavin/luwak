@@ -80,6 +80,7 @@ public class TestIntervalsMatches {
                 .addField("field1", "this is a test of field one")
                 .addField("field2", "and this is an additional test")
                 .build();
+        batch.addInputDocument(doc);
 
         monitor.update(new MonitorQuery("query1", "field1:test field2:test"));
 
@@ -106,13 +107,13 @@ public class TestIntervalsMatches {
         batch.addInputDocument(buildDoc("3", "this is a test"));
 
         assertThat(monitor.match(batch, IntervalsMatcher.FACTORY))
-                .matchesQuery("q1", "1")
+                .matchesQuery("q1", "3")
                     .inField(textfield)
                         .withHit(new IntervalsQueryMatch.Hit(3, 10, 3, 14))
-                .matchesQuery("q1", "2")
+                .matchesQuery("q1", "1")
                     .inField(textfield)
                         .withHit(new IntervalsQueryMatch.Hit(4, 15, 4, 23))
-                .doesNotMatchQuery("q1", "3");
+                .doesNotMatchQuery("q1", "2");
 
     }
 
