@@ -86,6 +86,7 @@ public class TestHighlightingMatcher {
                 .addField("field1", "this is a test of field one")
                 .addField("field2", "and this is an additional test")
                 .build();
+        batch.addInputDocument(doc);
 
         monitor.update(new MonitorQuery("query1", "field1:test field2:test"));
 
@@ -113,14 +114,13 @@ public class TestHighlightingMatcher {
         batch.addInputDocument(buildDoc("3", "this is a test"));
 
         assertThat(monitor.match(batch, HighlightingMatcher.FACTORY))
-                .matchesQuery("q1", "1")
+                .matchesQuery("q1", "3")
                     .inField(textfield)
                         .withHit(new HighlightsMatch.Hit(3, 10, 3, 14))
-                .matchesQuery("q1", "2")
+                .matchesQuery("q1", "1")
                     .inField(textfield)
                         .withHit(new HighlightsMatch.Hit(4, 15, 4, 23))
-                .doesNotMatchQuery("q1", "3");
-
+                .doesNotMatchQuery("q1", "2");
     }
 
     @Test
