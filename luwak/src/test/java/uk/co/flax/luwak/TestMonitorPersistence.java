@@ -57,7 +57,7 @@ public class TestMonitorPersistence {
                 new MonitorQuery("4", "test", ImmutableMap.of("language", "en", "wibble", "quack")));
 
             assertThat(monitor.match(batch, SimpleMatcher.FACTORY))
-                    .hasMatchCount(4);
+                    .hasMatchCount("doc1", 4);
 
         }
 
@@ -65,7 +65,7 @@ public class TestMonitorPersistence {
                                         new MMapDirectory(indexDirectory))) {
 
             Assertions.assertThat(monitor2.getQueryCount()).isEqualTo(4);
-            assertThat(monitor2.match(batch, SimpleMatcher.FACTORY)).hasMatchCount(4);
+            assertThat(monitor2.match(batch, SimpleMatcher.FACTORY)).hasMatchCount("doc1", 4);
         }
 
     }

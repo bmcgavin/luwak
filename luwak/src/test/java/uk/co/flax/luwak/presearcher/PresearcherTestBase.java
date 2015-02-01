@@ -74,7 +74,7 @@ public abstract class PresearcherTestBase {
         monitor.update(new MonitorQuery("1", "field_1:test"));
 
         assertThat(monitor.match(buildDoc("doc1", "field_2", "test"), SimpleMatcher.FACTORY))
-                .hasMatchCount(0);
+                .hasMatchCount("doc1", 0);
 
     }
 
@@ -83,7 +83,7 @@ public abstract class PresearcherTestBase {
 
         monitor.clear();
         assertThat(monitor.match(buildDoc("doc1", "field_2", "test"), SimpleMatcher.FACTORY))
-                .hasMatchCount(0)
+                .hasMatchCount("doc1", 0)
                 .hasQueriesRunCount(0);
 
     }
@@ -94,7 +94,7 @@ public abstract class PresearcherTestBase {
         monitor.update(new MonitorQuery("1", "*:*"));
 
         assertThat(monitor.match(buildDoc("doc1", "f", "wibble"), SimpleMatcher.FACTORY))
-                .hasMatchCount(1);
+                .hasMatchCount("doc1", 1);
 
     }
 
@@ -103,11 +103,13 @@ public abstract class PresearcherTestBase {
 
         monitor.update(new MonitorQuery("1", "*:* -f:foo"));
 
-        assertThat(monitor.match(buildDoc("doc1", "f", "bar"), SimpleMatcher.FACTORY))
-                .hasMatchCount(1);
+        DocumentBatch batch = new DocumentBatch(WHITESPACE);
+        batch.addInputDocument(InputDocument.builder("doc1").addField("f", "bar").build());
+        batch.addInputDocument(InputDocument.builder("doc2").addField("f", "foo").build());
 
-        assertThat(monitor.match(buildDoc("doc2", "f", "foo"), SimpleMatcher.FACTORY))
-                .hasMatchCount(0);
+        assertThat(monitor.match(batch, SimpleMatcher.FACTORY))
+                .hasMatchCount("doc1", 1)
+                .hasMatchCount("doc2", 0);
 
     }
 
@@ -140,7 +142,7 @@ public abstract class PresearcherTestBase {
 
             DocumentBatch docs = buildDoc("1", "f", "wibble");
             assertThat(monitor.match(docs, SimpleMatcher.FACTORY))
-                .hasMatchCount(1)
+                .hasMatchCount("1", 1)
                 .hasQueriesRunCount(1);
         }
     }
@@ -198,7 +200,7 @@ public abstract class PresearcherTestBase {
         monitor.update(new MonitorQuery("1", "testquery"));
 
         assertThat(monitor.match(buildDoc("1", "f", "wibble"), SimpleMatcher.FACTORY))
-                .hasMatchCount(1)
+                .hasMatchCount("1", 1)
                 .hasQueriesRunCount(1);
 
     }
@@ -231,7 +233,7 @@ public abstract class PresearcherTestBase {
                 batch.addInputDocument(doc);
                 assertThat(numeric_monitor.match(batch, SimpleMatcher.FACTORY))
                         .matchesDoc("doc" + i)
-                        .hasMatchCount(1)
+                        .hasMatchCount("doc1", 1)
                         .matchesQuery("query" + i, "doc" + i);
             }
 

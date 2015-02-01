@@ -43,13 +43,8 @@ public class HighlightingMatchAssert extends AbstractAssert<HighlightingMatchAss
         return new HighlightingMatchAssert(actual);
     }
 
-    public HighlightingMatchAssert matches(String docid) {
-        Assertions.assertThat(actual.getMatches(docid)).isNotNull();
-        return this;
-    }
-
-    public HighlightingMatchAssert hasMatchCount(int count) {
-        Assertions.assertThat(actual.getMatchCount()).isEqualTo(count);
+    public HighlightingMatchAssert hasMatchCount(String docId, int count) {
+        Assertions.assertThat(actual.getMatchCount(docId)).isEqualTo(count);
         return this;
     }
 

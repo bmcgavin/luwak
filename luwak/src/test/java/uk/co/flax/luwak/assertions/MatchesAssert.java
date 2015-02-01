@@ -43,8 +43,8 @@ public class MatchesAssert extends AbstractAssert<MatchesAssert, Matches<?>> {
         return this;
     }
 
-    public MatchesAssert hasMatchCount(int count) {
-        Assertions.assertThat(actual.getMatchCount()).isEqualTo(count);
+    public MatchesAssert hasMatchCount(String docid, int count) {
+        Assertions.assertThat(actual.getMatchCount(docid)).isEqualTo(count);
         return this;
     }
 

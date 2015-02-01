@@ -63,7 +63,7 @@ public class TestMonitor {
 
         assertThat(monitor.match(batch, SimpleMatcher.FACTORY))
                 .matchesDoc("doc1")
-                .hasMatchCount(1)
+                .hasMatchCount("doc1", 1)
                 .matchesQuery("query1", "doc1");
 
     }

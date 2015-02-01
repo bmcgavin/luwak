@@ -58,7 +58,7 @@ public class Matches<T extends QueryMatch> implements Iterable<DocumentMatches<T
      * @param queryId the query id
      * @return the QueryMatch for the given query, or null if it did not match
      */
-    public T matches(String docId, String queryId) {
+    public T matches(String queryId, String docId) {
         DocumentMatches<T> docMatches = matches.get(docId);
         if (docMatches == null)
             return null;
@@ -91,8 +91,11 @@ public class Matches<T extends QueryMatch> implements Iterable<DocumentMatches<T
     /**
      * @return the number of queries that matched
      */
-    public int getMatchCount() {
-        return matches.size();
+    public int getMatchCount(String docId) {
+        DocumentMatches docMatches = matches.get(docId);
+        if (docMatches == null)
+            return 0;
+        return docMatches.getMatches().size();
     }
 
     /**

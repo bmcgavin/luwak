@@ -71,7 +71,7 @@ public class TestHighlightingMatcher {
         Matches<HighlightsMatch> matcher = monitor.match(batch, HighlightingMatcher.FACTORY);
 
         assertThat(matcher)
-                .hasMatchCount(1)
+                .hasMatchCount("doc1", 1)
                 .matchesQuery("query1", "doc1")
                     .inField(textfield)
                         .withHit(new HighlightsMatch.Hit(3, 10, 3, 14));
@@ -92,7 +92,7 @@ public class TestHighlightingMatcher {
         Matches<HighlightsMatch> matcher = monitor.match(batch, HighlightingMatcher.FACTORY);
 
         assertThat(matcher)
-                .hasMatchCount(1)
+                .hasMatchCount("doc1", 1)
                 .matchesQuery("query1", "doc1")
                     .inField("field1")
                         .withHit(new HighlightsMatch.Hit(3, 10, 3, 14))
@@ -156,7 +156,7 @@ public class TestHighlightingMatcher {
 
         assertThat(monitor.match(batch, HighlightingMatcher.FACTORY))
                 .hasQueriesRunCount(4)
-                .hasMatchCount(2)
+                .hasMatchCount("doc1", 2)
                 .hasErrorCount(1);
     }
 
@@ -178,7 +178,7 @@ public class TestHighlightingMatcher {
         Matches<HighlightsMatch> matches = monitor.match(batch, HighlightingMatcher.FACTORY);
         assertThat(matches)
                 .hasQueriesRunCount(1)
-                .hasMatchCount(1);
+                .hasMatchCount("1", 1);
 
         Assertions.assertThat(matches.matches("1", "1").getHitCount()).isEqualTo(1);
 

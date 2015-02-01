@@ -70,7 +70,7 @@ public abstract class FieldFilterPresearcherComponentTestBase extends Presearche
 
         assertThat(monitor.match(batch, SimpleMatcher.FACTORY))
                 .matchesQuery("1", "enDoc")
-                .hasMatchCount(1)
+                .hasMatchCount("enDoc", 1)
                 .hasQueriesRunCount(1);
 
         /*
@@ -108,7 +108,7 @@ public abstract class FieldFilterPresearcherComponentTestBase extends Presearche
                 .addField("language", "en")
                 .build());
         assertThat(monitor.match(batch, SimpleMatcher.FACTORY))
-                .hasMatchCount(0)
+                .hasMatchCount("enDoc", 0)
                 .hasQueriesRunCount(0);
     }
 

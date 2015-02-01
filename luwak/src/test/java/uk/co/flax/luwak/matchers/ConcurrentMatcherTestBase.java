@@ -55,7 +55,7 @@ public abstract class ConcurrentMatcherTestBase {
             Matches<QueryMatch> matches
             = monitor.match(batch, matcherFactory(executor, SimpleMatcher.FACTORY, 10));
 
-            assertThat(matches.getMatchCount()).isEqualTo(1000);
+            assertThat(matches.getMatchCount("1")).isEqualTo(1000);
         }
     }
 
@@ -81,7 +81,7 @@ public abstract class ConcurrentMatcherTestBase {
             Matches<ScoringMatch> matches
                 = monitor.match(batch, matcherFactory(executor, ScoringMatcher.FACTORY, 10));
 
-            assertThat(matches.getMatchCount()).isEqualTo(10);
+            assertThat(matches.getMatchCount("1")).isEqualTo(10);
             assertThat(matches.getQueriesRun()).isEqualTo(30);
             assertThat(matches.getErrors()).isEmpty();
             for (ScoringMatch match : matches.getMatches("1")) {
@@ -109,7 +109,7 @@ public abstract class ConcurrentMatcherTestBase {
             MatcherFactory<QueryMatch> factory = matcherFactory(executor, SimpleMatcher.FACTORY, 10);
 
             Matches<QueryMatch> matches = monitor.match(batch, factory);
-            assertThat(matches.getMatchCount())
+            assertThat(matches.getMatchCount("doc1"))
                     .isEqualTo(3);
             System.out.println(matches.getSlowLog());
             assertThat(matches.getSlowLog().toString())
