@@ -1,10 +1,16 @@
 package uk.co.flax.luwak.intervals;
 
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
 
+import org.apache.lucene.index.LeafReaderContext;
+import org.apache.lucene.search.DocIdSet;
+import org.apache.lucene.search.Filter;
 import org.apache.lucene.search.Query;
+import org.apache.lucene.util.Bits;
 import uk.co.flax.luwak.CandidateMatcher;
-import uk.co.flax.luwak.InputDocument;
+import uk.co.flax.luwak.DocumentBatch;
 import uk.co.flax.luwak.MatcherFactory;
 
 /**
@@ -34,59 +40,63 @@ import uk.co.flax.luwak.MatcherFactory;
  */
 public class IntervalsMatcher extends CandidateMatcher<IntervalsQueryMatch> {
 
-    public IntervalsMatcher(InputDocument doc) {
-        super(doc);
+    public IntervalsMatcher(DocumentBatch docs) {
+        super(docs);
     }
 
     @Override
-    public IntervalsQueryMatch matchQuery(String queryId, Query matchQuery, Query highlightQuery) throws IOException {
-        IntervalsQueryMatch match = doMatch(queryId, matchQuery, highlightQuery);
-        if (match != null)
-            this.addMatch(queryId, match);
-        return match;
+    public IntervalsQueryMatch resolve(IntervalsQueryMatch match1, IntervalsQueryMatch match2) {
+        return IntervalsQueryMatch.merge(match1.getQueryId(), match1.getDocId(), match1, match2);
     }
 
     @Override
-    protected void addMatch(String queryId, IntervalsQueryMatch match) {
-        IntervalsQueryMatch previousMatch = this.matches(queryId);
-        if (previousMatch == null) {
-            super.addMatch(queryId, match);
+    public void matchQuery(String queryId, Query matchQuery, Query highlightQuery) throws IOException {
+
+        final QueryIntervalsMatchCollector collector = new QueryIntervalsMatchCollector(queryId, docs);
+        docs.getSearcher().search(matchQuery, collector);
+
+        // If there are no hits, we're done
+        if (collector.getMatches().size() == 0)
+            return;
+
+        // If there's no highlight query, then we just add all matches and return
+        if (highlightQuery == null) {
+            for (IntervalsQueryMatch match : collector.getMatches()) {
+                addMatch(match);
+            }
             return;
         }
-        super.addMatch(queryId, IntervalsQueryMatch.merge(queryId, previousMatch, match));
-    }
 
-    public IntervalsQueryMatch resolve(IntervalsQueryMatch match1, IntervalsQueryMatch match2) {
-        return IntervalsQueryMatch.merge(match1.getQueryId(), match1, match2);
-    }
+        // We need to run the highlight query against all the matching docs
+        QueryIntervalsMatchCollector collector2 = new QueryIntervalsMatchCollector(queryId, docs);
+        Filter matchesFilter = new Filter() {
+            @Override
+            public DocIdSet getDocIdSet(LeafReaderContext leafReaderContext, Bits bits) throws IOException {
+                return collector.getMatchBitset();
+            }
+        };
+        docs.getSearcher().search(highlightQuery, matchesFilter, collector2);
 
-    private IntervalsQueryMatch doMatch(String queryId, Query matchQuery, Query highlightQuery) throws IOException {
-
-        QueryIntervalsMatchCollector collector = new QueryIntervalsMatchCollector(queryId);
-        doc.getSearcher().search(matchQuery, collector);
-        IntervalsQueryMatch hits = collector.getMatches();
-
-        if (hits == null)
-            return null;
-
-        if (highlightQuery == null) {
-            return hits;
+        // Collect all highlighter matches
+        Set<String> hlIds = new HashSet<>();
+        for (IntervalsQueryMatch match : collector2.getMatches()) {
+            addMatch(match);
+            hlIds.add(match.getDocId());
         }
 
-        QueryIntervalsMatchCollector collector2 = new QueryIntervalsMatchCollector(queryId);
-        doc.getSearcher().search(highlightQuery, collector2);
-        IntervalsQueryMatch hlhits = collector2.getMatches();
+        // For any document that didn't have highlighter matches, add back the original
+        // matches instead.
+        for (IntervalsQueryMatch match : collector.getMatches()) {
+            if (!hlIds.contains(match.getDocId()))
+                addMatch(match);
+        }
 
-        if (hlhits != null)
-            return hlhits;
-        else
-            return hits;
     }
 
     public static final MatcherFactory<IntervalsQueryMatch> FACTORY = new MatcherFactory<IntervalsQueryMatch>() {
         @Override
-        public IntervalsMatcher createMatcher(InputDocument doc) {
-            return new IntervalsMatcher(doc);
+        public IntervalsMatcher createMatcher(DocumentBatch docs) {
+            return new IntervalsMatcher(docs);
         }
     };
 

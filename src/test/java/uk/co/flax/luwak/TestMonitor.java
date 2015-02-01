@@ -52,29 +52,32 @@ public class TestMonitor {
     public void singleTermQueryMatchesSingleDocument() throws IOException {
 
         String document = "This is a test document";
-        InputDocument doc = InputDocument.builder("doc1")
-                .addField(TEXTFIELD, document, WHITESPACE)
-                .build();
+
+        DocumentBatch batch = new DocumentBatch(WHITESPACE);
+        batch.addInputDocument(InputDocument.builder("doc1")
+                .addField(TEXTFIELD, document)
+                .build());
 
         monitor.update(new MonitorQuery("query1", "test"));
 
-        assertThat(monitor.match(doc, SimpleMatcher.FACTORY))
-                .matches("doc1")
+        assertThat(monitor.match(batch, SimpleMatcher.FACTORY))
+                .matchesDoc("doc1")
                 .hasMatchCount(1)
-                .matchesQuery("query1");
+                .matchesQuery("query1", "doc1");
 
     }
 
     @Test
     public void matchStatisticsAreReported() throws IOException {
         String document = "This is a test document";
-        InputDocument doc = InputDocument.builder("doc1")
-                .addField(TEXTFIELD, document, WHITESPACE)
-                .build();
+        DocumentBatch batch = new DocumentBatch(WHITESPACE);
+        batch.addInputDocument(InputDocument.builder("doc1")
+                .addField(TEXTFIELD, document)
+                .build());
 
         monitor.update(new MonitorQuery("query1", "test"));
 
-        Matches<QueryMatch> matches = monitor.match(doc, SimpleMatcher.FACTORY);
+        Matches<QueryMatch> matches = monitor.match(batch, SimpleMatcher.FACTORY);
         Assertions.assertThat(matches.getQueriesRun()).isEqualTo(1);
         Assertions.assertThat(matches.getQueryBuildTime()).isGreaterThan(-1);
         Assertions.assertThat(matches.getSearchTime()).isGreaterThan(-1);
@@ -86,10 +89,11 @@ public class TestMonitor {
 
         monitor.update(new MonitorQuery("query1", "that"));
 
-        InputDocument doc = InputDocument.builder("doc1").addField(TEXTFIELD, "that", WHITESPACE).build();
-        assertThat(monitor.match(doc, SimpleMatcher.FACTORY))
+        DocumentBatch batch = new DocumentBatch(WHITESPACE);
+        batch.addInputDocument(InputDocument.builder("doc1").addField(TEXTFIELD, "that").build());
+        assertThat(monitor.match(batch, SimpleMatcher.FACTORY))
                 .hasQueriesRunCount(1)
-                .matchesQuery("query1");
+                .matchesQuery("query1", "doc1");
     }
 
     @Test
@@ -108,10 +112,11 @@ public class TestMonitor {
         monitor.deleteById("query2", "query1");
         Assertions.assertThat(monitor.getQueryCount()).isEqualTo(1);
 
-        InputDocument doc = InputDocument.builder("doc1").addField(TEXTFIELD, "other things", WHITESPACE).build();
-        assertThat(monitor.match(doc, SimpleMatcher.FACTORY))
+        DocumentBatch batch = new DocumentBatch(WHITESPACE);
+        batch.addInputDocument(InputDocument.builder("doc1").addField(TEXTFIELD, "other things").build());
+        assertThat(monitor.match(batch, SimpleMatcher.FACTORY))
                 .hasQueriesRunCount(1)
-                .matchesQuery("query3");
+                .matchesQuery("query3", "doc1");
 
     }
 
@@ -141,8 +146,9 @@ public class TestMonitor {
         monitor.clear();
         Assertions.assertThat(monitor.getQueryCount()).isEqualTo(0);
 
-        InputDocument doc = InputDocument.builder("doc1").addField(TEXTFIELD, "other things", WHITESPACE).build();
-        Matches<QueryMatch> matches = monitor.match(doc, SimpleMatcher.FACTORY);
+        DocumentBatch batch = new DocumentBatch(WHITESPACE);
+        batch.addInputDocument(InputDocument.builder("doc1").addField(TEXTFIELD, "other things").build());
+        Matches<QueryMatch> matches = monitor.match(batch, SimpleMatcher.FACTORY);
 
         Assertions.assertThat(matches.getQueriesRun()).isEqualTo(0);
     }
@@ -160,6 +166,13 @@ public class TestMonitor {
         verify(reporter).progress(5001, 5001);
         verify(reporter).progress(10002, 5001);
         verify(reporter).finish(10355, 353);
+
+    }
+
+    @Test
+    public void testDocumentBatching() throws IOException {
+
+
 
     }
 

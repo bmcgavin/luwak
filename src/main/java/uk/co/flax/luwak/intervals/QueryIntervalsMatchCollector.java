@@ -17,10 +17,7 @@ package uk.co.flax.luwak.intervals;
 */
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.apache.lucene.search.Scorer;
 import org.apache.lucene.search.SimpleCollector;
@@ -28,36 +25,52 @@ import org.apache.lucene.search.Weight;
 import org.apache.lucene.search.intervals.Interval;
 import org.apache.lucene.search.intervals.IntervalCollector;
 import org.apache.lucene.search.intervals.IntervalIterator;
+import org.apache.lucene.util.FixedBitSet;
+import uk.co.flax.luwak.DocumentBatch;
 
 /**
  * a specialized Collector that uses an {@link IntervalIterator} to collect
  * match positions from a Scorer.
  */
-public class QueryIntervalsMatchCollector extends SimpleCollector implements IntervalCollector {
+public class QueryIntervalsMatchCollector extends SimpleCollector {
 
     private IntervalIterator positions;
 
-    private final MatchBuilder matches;
+    private final String queryId;
+    private final DocumentBatch docs;
+    private final FixedBitSet matchBits;
 
-    public QueryIntervalsMatchCollector(String queryId) {
-        matches = new MatchBuilder(queryId);
+    private final List<IntervalsQueryMatch> matches = new LinkedList<>();
+
+    public QueryIntervalsMatchCollector(String queryId, DocumentBatch docs) throws IOException {
+        this.queryId = queryId;
+        this.docs = docs;
+        this.matchBits = new FixedBitSet(docs.getIndexReader().maxDoc());
     }
 
-    public IntervalsQueryMatch getMatches() {
-        return matches.build();
+    public Collection<IntervalsQueryMatch> getMatches() {
+        return matches;
+    }
+
+    public FixedBitSet getMatchBitset() {
+        return matchBits;
     }
 
     @Override
     public void collect(int doc) throws IOException {
+        String docId = docs.resolveDocId(doc);
+        MatchBuilder builder = new MatchBuilder(queryId, docId);
         if (positions != null) {
             positions.scorerAdvanced(doc);
             while(positions.next() != null) {
-                positions.collect(this);
+                positions.collect(builder);
             }
         }
         else {
-            matches.setMatch();
+            builder.setMatch();
         }
+        matches.add(builder.build());
+        matchBits.set(doc);
     }
 
     @Override
@@ -80,18 +93,8 @@ public class QueryIntervalsMatchCollector extends SimpleCollector implements Int
         return Weight.PostingFeatures.OFFSETS;
     }
 
-    @Override
-    public void collectLeafPosition(Scorer scorer, Interval interval, int docID) {
-        matches.addInterval(interval);
-    }
 
-    @Override
-    public void collectComposite(Scorer scorer, Interval interval,
-                                 int docID) {
-        //offsets.add(new Offset(interval.begin, interval.end, interval.offsetBegin, interval.offsetEnd));
-    }
-
-    private static class MatchBuilder {
+    private static class MatchBuilder implements IntervalCollector {
 
         private final Map<String, List<IntervalsQueryMatch.Hit>> hits = new HashMap<>();
 
@@ -99,8 +102,11 @@ public class QueryIntervalsMatchCollector extends SimpleCollector implements Int
 
         private String queryId;
 
-        public MatchBuilder(String queryId) {
+        private String docId;
+
+        public MatchBuilder(String queryId, String docId) {
             this.queryId = queryId;
+            this.docId = docId;
         }
 
         public void setMatch() {
@@ -117,8 +123,20 @@ public class QueryIntervalsMatchCollector extends SimpleCollector implements Int
         public IntervalsQueryMatch build() {
             if (!match && hits.size() == 0)
                 return null;
-            return new IntervalsQueryMatch(queryId, hits);
+            return new IntervalsQueryMatch(queryId, docId, hits);
         }
+
+        @Override
+        public void collectLeafPosition(Scorer scorer, Interval interval, int docID) {
+            addInterval(interval);
+        }
+
+        @Override
+        public void collectComposite(Scorer scorer, Interval interval,
+                                     int docID) {
+            //offsets.add(new Offset(interval.begin, interval.end, interval.offsetBegin, interval.offsetEnd));
+        }
+
     }
 
 }

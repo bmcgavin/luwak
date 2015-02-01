@@ -1,11 +1,13 @@
 package uk.co.flax.luwak;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.lucene.index.LeafReader;
-import org.apache.lucene.index.SlowCompositeReaderWrapper;
 import org.apache.lucene.search.Query;
 
 /**
@@ -30,11 +32,11 @@ import org.apache.lucene.search.Query;
  */
 public abstract class CandidateMatcher<T extends QueryMatch> {
 
-    protected final InputDocument doc;
+    protected final DocumentBatch docs;
     protected long slowLogLimit;
 
-    private final List<MatchError> errors = new ArrayList<>();
-    private final Map<String, T> matches = new HashMap<>();
+    private final List<MatchError> errors = new LinkedList<>();
+    private final Map<String, MatchHolder<T>> matches = new HashMap<>();
 
     private long queryBuildTime = -1;
     private long searchTime = System.nanoTime();
@@ -42,12 +44,16 @@ public abstract class CandidateMatcher<T extends QueryMatch> {
 
     protected final StringBuilder slowlog = new StringBuilder();
 
+    private static class MatchHolder<T> {
+        Map<String, T> matches = new HashMap<>();
+    }
+
     /**
      * Creates a new CandidateMatcher for the supplied InputDocument
-     * @param doc the document to run queries against
+     * @param docs the documents to run queries against
      */
-    public CandidateMatcher(InputDocument doc) {
-        this.doc = doc;
+    public CandidateMatcher(DocumentBatch docs) {
+        this.docs = docs;
     }
 
     /**
@@ -60,13 +66,28 @@ public abstract class CandidateMatcher<T extends QueryMatch> {
      * @throws IOException
      * @return true if the query matches
      */
-    public abstract T matchQuery(String queryId, Query matchQuery, Query highlightQuery) throws IOException;
+    public abstract void matchQuery(String queryId, Query matchQuery, Query highlightQuery) throws IOException;
 
-    protected void addMatch(String queryId, T match) {
-        if (matches.containsKey(queryId))
-            matches.put(queryId, resolve(match, matches.get(queryId)));
-        else
-            matches.put(queryId, match);
+    protected void addMatch(String queryId, int docId, T match) {
+        addMatch(queryId, docs.resolveDocId(docId), match);
+    }
+
+    private void addMatch(String queryId, String docId, T match) {
+        MatchHolder<T> docMatches = matches.get(docId);
+        if (docMatches == null) {
+            docMatches = new MatchHolder<>();
+            matches.put(docId, docMatches);
+        }
+        if (docMatches.matches.containsKey(queryId)) {
+            docMatches.matches.put(queryId, resolve(match, docMatches.matches.get(queryId)));
+        }
+        else {
+            docMatches.matches.put(queryId, match);
+        }
+    }
+
+    protected void addMatch(T match) {
+        addMatch(match.getQueryId(), match.getDocId(), match);
     }
 
     /**
@@ -103,15 +124,23 @@ public abstract class CandidateMatcher<T extends QueryMatch> {
      * Returns the QueryMatch for the given query, or null if it did not match
      * @param queryId the query id
      */
-    protected T matches(String queryId) {
-        return matches.get(queryId);
+    protected T matches(String docId, String queryId) {
+        MatchHolder<T> docMatches = matches.get(docId);
+        if (docMatches == null)
+            return null;
+        return docMatches.matches.get(queryId);
     }
 
     public Matches<T> getMatches() {
-        return new Matches<>(doc.getId(), matches, errors, queryBuildTime, searchTime, queriesRun, slowlog.toString());
+        Map<String, DocumentMatches<T>> results = new HashMap<>();
+        for (Map.Entry<String, MatchHolder<T>> entry : matches.entrySet()) {
+            DocumentMatches<T> docMatches = new DocumentMatches<>(entry.getKey(), entry.getValue().matches.values());
+            results.put(entry.getKey(), docMatches);
+        }
+        return new Matches<>(results, errors, queryBuildTime, searchTime, queriesRun, docs.getBatchSize(), slowlog.toString());
     }
 
     public LeafReader getIndexReader() throws IOException {
-        return SlowCompositeReaderWrapper.wrap(doc.getSearcher().getIndexReader());
+        return docs.getIndexReader();
     }
 }

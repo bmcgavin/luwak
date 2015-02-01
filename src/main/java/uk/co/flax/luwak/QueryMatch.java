@@ -18,11 +18,18 @@ public class QueryMatch {
 
     private final String queryId;
 
-    public QueryMatch(String queryId) {
+    private final String docId;
+
+    public QueryMatch(String queryId, String docId) {
         this.queryId = queryId;
+        this.docId = docId;
     }
 
     public String getQueryId() {
         return queryId;
+    }
+
+    public String getDocId() {
+        return docId;
     }
 }

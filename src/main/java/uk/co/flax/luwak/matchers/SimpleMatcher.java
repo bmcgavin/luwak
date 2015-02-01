@@ -3,7 +3,7 @@ package uk.co.flax.luwak.matchers;
 import java.io.IOException;
 
 import org.apache.lucene.search.Scorer;
-import uk.co.flax.luwak.InputDocument;
+import uk.co.flax.luwak.DocumentBatch;
 import uk.co.flax.luwak.MatcherFactory;
 import uk.co.flax.luwak.QueryMatch;
 
@@ -24,8 +24,8 @@ import uk.co.flax.luwak.QueryMatch;
  */
 public class SimpleMatcher extends CollectingMatcher<QueryMatch> {
 
-    public SimpleMatcher(InputDocument doc) {
-        super(doc);
+    public SimpleMatcher(DocumentBatch docs) {
+        super(docs);
     }
 
     @Override
@@ -34,14 +34,14 @@ public class SimpleMatcher extends CollectingMatcher<QueryMatch> {
     }
 
     @Override
-    protected QueryMatch doMatch(String queryId, Scorer scorer) throws IOException {
-        return new QueryMatch(queryId);
+    protected QueryMatch doMatch(String queryId, int doc, Scorer scorer) throws IOException {
+        return new QueryMatch(queryId, docs.resolveDocId(doc));
     }
 
     public static final MatcherFactory<QueryMatch> FACTORY = new MatcherFactory<QueryMatch>() {
         @Override
-        public SimpleMatcher createMatcher(InputDocument doc) {
-            return new SimpleMatcher(doc);
+        public SimpleMatcher createMatcher(DocumentBatch docs) {
+            return new SimpleMatcher(docs);
         }
     };
 

@@ -3,7 +3,7 @@ package uk.co.flax.luwak.matchers;
 import java.io.IOException;
 
 import org.apache.lucene.search.Scorer;
-import uk.co.flax.luwak.InputDocument;
+import uk.co.flax.luwak.DocumentBatch;
 import uk.co.flax.luwak.MatcherFactory;
 
 /**
@@ -27,15 +27,15 @@ import uk.co.flax.luwak.MatcherFactory;
  */
 public class ScoringMatcher extends CollectingMatcher<ScoringMatch> {
 
-    public ScoringMatcher(InputDocument doc) {
-        super(doc);
+    public ScoringMatcher(DocumentBatch docs) {
+        super(docs);
     }
 
     @Override
-    protected ScoringMatch doMatch(String queryId, Scorer scorer) throws IOException {
+    protected ScoringMatch doMatch(String queryId, int doc, Scorer scorer) throws IOException {
         float score = scorer.score();
         if (score > 0)
-            return new ScoringMatch(queryId, score);
+            return new ScoringMatch(queryId, docs.resolveDocId(doc), score);
         return null;
     }
 
@@ -49,8 +49,8 @@ public class ScoringMatcher extends CollectingMatcher<ScoringMatch> {
      */
     public static final MatcherFactory<ScoringMatch> FACTORY = new MatcherFactory<ScoringMatch>() {
         @Override
-        public ScoringMatcher createMatcher(InputDocument doc) {
-            return new ScoringMatcher(doc);
+        public ScoringMatcher createMatcher(DocumentBatch docs) {
+            return new ScoringMatcher(docs);
         }
     };
 

@@ -38,11 +38,7 @@ public class TestTermPresearcher extends PresearcherTestBase {
                 = new MonitorQuery("2", "document");
         monitor.update(query1, query2);
 
-        InputDocument doc = InputDocument.builder("doc1")
-                .addField(TEXTFIELD, "this is a test document", WHITESPACE)
-                .build();
-
-        Matches<QueryMatch> matcher = monitor.match(doc, SimpleMatcher.FACTORY);
+        Matches<QueryMatch> matcher = monitor.match(buildDoc("doc1", TEXTFIELD, "this is a test document"), SimpleMatcher.FACTORY);
         assertThat(matcher)
                 .hasMatchCount(1)
                 .hasQueriesRunCount(1);
@@ -54,19 +50,11 @@ public class TestTermPresearcher extends PresearcherTestBase {
 
         monitor.update(new MonitorQuery("1", "document -test"));
 
-        InputDocument doc1 = InputDocument.builder("doc1")
-                .addField(TEXTFIELD, "this is a test document", WHITESPACE)
-                .build();
-
-        assertThat(monitor.match(doc1, SimpleMatcher.FACTORY))
+        assertThat(monitor.match(buildDoc("doc1", TEXTFIELD, "this is a test document"), SimpleMatcher.FACTORY))
                 .hasMatchCount(0)
                 .hasQueriesRunCount(1);
 
-        InputDocument doc2 = InputDocument.builder("doc2")
-                .addField(TEXTFIELD, "weeble sclup test", WHITESPACE)
-                .build();
-
-        assertThat(monitor.match(doc2, SimpleMatcher.FACTORY))
+        assertThat(monitor.match(buildDoc("doc2", TEXTFIELD, "weeble sclup test"), SimpleMatcher.FACTORY))
                 .hasMatchCount(0)
                 .hasQueriesRunCount(0);
     }
@@ -76,11 +64,7 @@ public class TestTermPresearcher extends PresearcherTestBase {
 
         monitor.update(new MonitorQuery("1", "/hell./"));
 
-        InputDocument doc = InputDocument.builder("doc1")
-                .addField(TEXTFIELD, "hello", WHITESPACE)
-                .build();
-
-        assertThat(monitor.match(doc, SimpleMatcher.FACTORY))
+        assertThat(monitor.match(buildDoc("doc1", TEXTFIELD, "hello"), SimpleMatcher.FACTORY))
                 .hasMatchCount(1)
                 .hasQueriesRunCount(1);
 

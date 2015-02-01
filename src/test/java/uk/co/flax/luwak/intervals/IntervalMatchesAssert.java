@@ -29,22 +29,17 @@ public class IntervalMatchesAssert extends AbstractAssert<IntervalMatchesAssert,
         super(actual, IntervalMatchesAssert.class);
     }
 
-    public IntervalsQueryMatchAssert matchesQuery(String queryId) {
-        for (IntervalsQueryMatch match : actual) {
+    public IntervalsQueryMatchAssert matchesQuery(String queryId, String docId) {
+        for (IntervalsQueryMatch match : actual.getMatches(docId)) {
             if (match.getQueryId().equals(queryId))
-                return new IntervalsQueryMatchAssert((IntervalsQueryMatch) match);
+                return new IntervalsQueryMatchAssert(this, match);
         }
-        fail("Document " + actual.docId() + " did not match query " + queryId);
+        fail("Document " + docId + " did not match query " + queryId);
         return null;
     }
 
     public static IntervalMatchesAssert assertThat(Matches<IntervalsQueryMatch> actual) {
         return new IntervalMatchesAssert(actual);
-    }
-
-    public IntervalMatchesAssert matches(String docid) {
-        Assertions.assertThat(actual.docId()).isEqualTo(docid);
-        return this;
     }
 
     public IntervalMatchesAssert hasMatchCount(int count) {
@@ -65,8 +60,8 @@ public class IntervalMatchesAssert extends AbstractAssert<IntervalMatchesAssert,
         return this;
     }
 
-    public IntervalMatchesAssert doesNotMatchQuery(String queryId) {
-        for (IntervalsQueryMatch match : actual) {
+    public IntervalMatchesAssert doesNotMatchQuery(String queryId, String docId) {
+        for (IntervalsQueryMatch match : actual.getMatches(docId)) {
             Assertions.assertThat(match.getQueryId()).isNotEqualTo(queryId);
         }
         return this;

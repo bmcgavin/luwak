@@ -55,19 +55,19 @@ public class TestCachePurging {
         assertThat(monitor.getDisjunctCount()).isEqualTo(4);
         assertThat(monitor.getStats().cachedQueries).isEqualTo(4);
 
-        InputDocument doc = InputDocument.builder("doc1")
-                .addField("field", "test1 test2 test3", new WhitespaceAnalyzer()).build();
-        assertThat(monitor.match(doc, SimpleMatcher.FACTORY).getMatchCount()).isEqualTo(3);
+        DocumentBatch batch = new DocumentBatch(new WhitespaceAnalyzer());
+        batch.addInputDocument(InputDocument.builder("doc1").addField("field", "test1 test2 test3").build());
+        assertThat(monitor.match(batch, SimpleMatcher.FACTORY).getMatchCount()).isEqualTo(3);
 
         monitor.deleteById("1");
         assertThat(monitor.getQueryCount()).isEqualTo(2);
         assertThat(monitor.getStats().cachedQueries).isEqualTo(4);
-        assertThat(monitor.match(doc, SimpleMatcher.FACTORY).getMatchCount()).isEqualTo(2);
+        assertThat(monitor.match(batch, SimpleMatcher.FACTORY).getMatchCount()).isEqualTo(2);
 
         monitor.purgeCache();
         assertThat(monitor.getStats().cachedQueries).isEqualTo(2);
 
-        Matches<QueryMatch> result = monitor.match(doc, SimpleMatcher.FACTORY);
+        Matches<QueryMatch> result = monitor.match(batch, SimpleMatcher.FACTORY);
         assertThat(result.getMatchCount()).isEqualTo(2);
     }
 
@@ -122,9 +122,11 @@ public class TestCachePurging {
             finishUpdating.await();
 
             assertThat(monitor.getStats().cachedQueries).isEqualTo(340);
-            InputDocument doc = InputDocument.builder("doc1")
-                    .addField("field", "test", new WhitespaceAnalyzer()).build();
-            Matches<QueryMatch> matcher = monitor.match(doc, SimpleMatcher.FACTORY);
+
+            DocumentBatch batch = new DocumentBatch(new WhitespaceAnalyzer());
+            batch.addInputDocument(InputDocument.builder("doc1").addField("field", "test").build());
+
+            Matches<QueryMatch> matcher = monitor.match(batch, SimpleMatcher.FACTORY);
             assertThat(matcher.getErrors()).isEmpty();
             assertThat(matcher.getMatchCount()).isEqualTo(340);
 

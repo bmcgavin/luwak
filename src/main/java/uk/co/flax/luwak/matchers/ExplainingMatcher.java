@@ -5,6 +5,7 @@ import java.io.IOException;
 import org.apache.lucene.search.Explanation;
 import org.apache.lucene.search.Query;
 import uk.co.flax.luwak.CandidateMatcher;
+import uk.co.flax.luwak.DocumentBatch;
 import uk.co.flax.luwak.InputDocument;
 import uk.co.flax.luwak.MatcherFactory;
 
@@ -28,21 +29,23 @@ public class ExplainingMatcher extends CandidateMatcher<ExplainingMatch> {
 
     public static final MatcherFactory<ExplainingMatch> FACTORY = new MatcherFactory<ExplainingMatch>() {
         @Override
-        public ExplainingMatcher createMatcher(InputDocument doc) {
-            return new ExplainingMatcher(doc);
+        public ExplainingMatcher createMatcher(DocumentBatch docs) {
+            return new ExplainingMatcher(docs);
         }
     };
 
-    public ExplainingMatcher(InputDocument doc) {
-        super(doc);
+    public ExplainingMatcher(DocumentBatch docs) {
+        super(docs);
     }
 
     @Override
-    public ExplainingMatch matchQuery(String queryId, Query matchQuery, Query highlightQuery) throws IOException {
-        Explanation explanation = doc.getSearcher().explain(matchQuery, 0);
-        if (!explanation.isMatch())
-            return null;
-        return new ExplainingMatch(queryId, explanation);
+    public void matchQuery(String queryId, Query matchQuery, Query highlightQuery) throws IOException {
+        int maxDocs = docs.getIndexReader().maxDoc();
+        for (int i = 0; i < maxDocs; i++) {
+            Explanation explanation = docs.getSearcher().explain(matchQuery, i);
+            if (explanation.isMatch())
+                addMatch(new ExplainingMatch(queryId, docs.resolveDocId(i), explanation));
+        }
     }
 
     @Override

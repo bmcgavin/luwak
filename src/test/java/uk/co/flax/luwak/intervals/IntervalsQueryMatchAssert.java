@@ -20,12 +20,11 @@ import org.assertj.core.api.Assertions;
  */
 public class IntervalsQueryMatchAssert extends AbstractAssert<IntervalsQueryMatchAssert, IntervalsQueryMatch> {
 
-    protected IntervalsQueryMatchAssert(IntervalsQueryMatch actual) {
-        super(actual, IntervalsQueryMatchAssert.class);
-    }
+    protected final IntervalMatchesAssert parent;
 
-    public static IntervalsQueryMatchAssert assertThat(IntervalsQueryMatch actual) {
-        return new IntervalsQueryMatchAssert(actual);
+    protected IntervalsQueryMatchAssert(IntervalMatchesAssert parent, IntervalsQueryMatch actual) {
+        super(actual, IntervalsQueryMatchAssert.class);
+        this.parent = parent;
     }
 
     public IntervalsQueryMatchAssert withHitCount(int count) {

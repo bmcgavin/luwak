@@ -51,30 +51,29 @@ public class ParallelMatcher<T extends QueryMatch> extends CandidateMatcher<T> {
 
     /**
      * Create a new ParallelMatcher
-     * @param doc the InputDocument to match against
+     * @param docs the DocumentBatch to match against
      * @param executor an ExecutorService to use for parallel execution
      * @param matcherFactory MatcherFactory to use to create CandidateMatchers
      * @param threads the number of threads to execute on
      */
-    public ParallelMatcher(InputDocument doc, ExecutorService executor,
+    public ParallelMatcher(DocumentBatch docs, ExecutorService executor,
                            MatcherFactory<T> matcherFactory, int threads) {
-        super(doc);
+        super(docs);
         for (int i = 0; i < threads; i++) {
             MatcherWorker mw = new MatcherWorker(matcherFactory);
             workers.add(mw);
             futures.add(executor.submit(mw));
         }
-        collectorMatcher = matcherFactory.createMatcher(doc);
+        collectorMatcher = matcherFactory.createMatcher(docs);
     }
 
     @Override
-    public T matchQuery(String queryId, Query matchQuery, Query highlightQuery) throws IOException {
+    public void matchQuery(String queryId, Query matchQuery, Query highlightQuery) throws IOException {
         try {
             queue.put(new MatcherTask(queryId, matchQuery, highlightQuery));
         } catch (InterruptedException e) {
             throw new IOException("Interrupted during match", e);
         }
-        return null;
     }
 
     @Override
@@ -99,8 +98,10 @@ public class ParallelMatcher<T extends QueryMatch> extends CandidateMatcher<T> {
 
             for (Future<CandidateMatcher<T>> future : futures) {
                 Matches<T> matches = future.get().getMatches();
-                for (T match : matches) {
-                    this.addMatch(match.getQueryId(), match);
+                for (DocumentMatches<T> docMatches : matches) {
+                    for (T match : docMatches) {
+                        this.addMatch(match);
+                    }
                 }
                 for (MatchError error : matches.getErrors()) {
                     this.reportError(error);
@@ -119,7 +120,7 @@ public class ParallelMatcher<T extends QueryMatch> extends CandidateMatcher<T> {
         final CandidateMatcher<T> matcher;
 
         private MatcherWorker(MatcherFactory<T> matcherFactory) {
-            this.matcher = matcherFactory.createMatcher(doc);
+            this.matcher = matcherFactory.createMatcher(docs);
             this.matcher.setSlowLogLimit(slowLogLimit);
         }
 
@@ -177,8 +178,8 @@ public class ParallelMatcher<T extends QueryMatch> extends CandidateMatcher<T> {
         }
 
         @Override
-        public ParallelMatcher<T> createMatcher(InputDocument doc) {
-            return new ParallelMatcher<>(doc, executor, matcherFactory, threads);
+        public ParallelMatcher<T> createMatcher(DocumentBatch docs) {
+            return new ParallelMatcher<>(docs, executor, matcherFactory, threads);
         }
     }
 

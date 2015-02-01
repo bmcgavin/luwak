@@ -37,4 +37,12 @@ public class FieldMatchAssert extends AbstractAssert<FieldMatchAssert, Collectio
     public FieldMatchAssert inField(String fieldname) {
         return parent.inField(fieldname);
     }
+
+    public IntervalsQueryMatchAssert matchesQuery(String queryId, String docId) {
+        return parent.parent.matchesQuery(queryId, docId);
+    }
+
+    public IntervalMatchesAssert doesNotMatchQuery(String queryId, String docId) {
+        return parent.parent.doesNotMatchQuery(queryId, docId);
+    }
 }

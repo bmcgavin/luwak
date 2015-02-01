@@ -4,7 +4,6 @@ import java.io.IOException;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
-import org.apache.lucene.index.LeafReader;
 import org.apache.lucene.search.BooleanQuery;
 import org.junit.Test;
 import uk.co.flax.luwak.matchers.SimpleMatcher;
@@ -38,15 +37,18 @@ public class TestTermsEnumFilter {
         Monitor monitor = new Monitor(new LuceneQueryParser("f"), new TermFilteredPresearcher());
         monitor.update(new MonitorQuery("1", "f:should"), new MonitorQuery("2", "+text:hello +text:world"));
 
-        InputDocument doc = InputDocument.builder("doc")
-                .addField("text", "this is a document about the world saying hello", ANALYZER)
-                .addField("title", "but this text should be ignored", ANALYZER)
-                .build();
+        DocumentBatch batch = new DocumentBatch(ANALYZER);
 
-        BooleanQuery query = (BooleanQuery) monitor.buildQuery((LeafReader)doc.getSearcher().getIndexReader());
+        InputDocument doc = InputDocument.builder("doc")
+                .addField("text", "this is a document about the world saying hello")
+                .addField("title", "but this text should be ignored")
+                .build();
+        batch.addInputDocument(doc);
+
+        BooleanQuery query = (BooleanQuery) monitor.buildQuery(batch.getIndexReader());
 
         assertThat(query.clauses()).hasSize(2);     // text:world __anytokenfield:__ANYTOKEN__
-        assertThat(monitor.match(doc, SimpleMatcher.FACTORY).getMatchCount()).isEqualTo(1);
+        assertThat(monitor.match(batch, SimpleMatcher.FACTORY).getMatchCount()).isEqualTo(1);
 
     }
 

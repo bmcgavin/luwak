@@ -471,14 +471,14 @@ public class Monitor implements Closeable {
     /**
      * Match an {@link InputDocument} against the queryindex, calling a {@link CandidateMatcher} produced by the
      * supplied {@link MatcherFactory} for each matching query.
-     * @param doc the InputDocument to match
+     * @param docs the DocumentBatch to match
      * @param factory a {@link MatcherFactory} to use to create a {@link CandidateMatcher} for the match run
      * @param <T> the type of {@link CandidateMatcher} to return
      * @return a {@link CandidateMatcher} summarizing the match run.
      * @throws IOException
      */
-    public <T extends QueryMatch> Matches<T> match(InputDocument doc, MatcherFactory<T> factory) throws IOException {
-        CandidateMatcher<T> matcher = factory.createMatcher(doc);
+    public <T extends QueryMatch> Matches<T> match(DocumentBatch docs, MatcherFactory<T> factory) throws IOException {
+        CandidateMatcher<T> matcher = factory.createMatcher(docs);
         matcher.setSlowLogLimit(slowLogLimit);
         match(matcher);
         return matcher.getMatches();
@@ -552,18 +552,18 @@ public class Monitor implements Closeable {
     }
 
     /**
-     * Match an InputDocument against the queries stored in the Monitor, also returning information
+     * Match a DocumentBatch against the queries stored in the Monitor, also returning information
      * about which queries were selected by the presearcher, and why.
-     * @param doc an InputDocument to match against the index
+     * @param docs a DocumentBatch to match against the index
      * @param factory a {@link MatcherFactory} to use to create a {@link CandidateMatcher} for the match run
      * @param <T> the type of QueryMatch produced by the CandidateMatcher
      * @return a PresearcherMatches object
      * @throws IOException
      */
     public <T extends QueryMatch> PresearcherMatches<T>
-            debug(InputDocument doc, MatcherFactory<T> factory) throws IOException {
-        PresearcherMatchCollector<T> collector = new PresearcherMatchCollector<>(factory.createMatcher(doc));
-        match(SlowCompositeReaderWrapper.wrap(doc.getSearcher().getIndexReader()), collector);
+            debug(DocumentBatch docs, MatcherFactory<T> factory) throws IOException {
+        PresearcherMatchCollector<T> collector = new PresearcherMatchCollector<>(factory.createMatcher(docs));
+        match(docs.getIndexReader(), collector);
         return collector.getMatches();
     }
 

@@ -39,8 +39,8 @@ public class IntervalsQueryMatch extends QueryMatch {
      *
      * @param queryId the ID of the query
      */
-    public IntervalsQueryMatch(String queryId, Map<String, List<Hit>> hits) {
-        super(queryId);
+    public IntervalsQueryMatch(String queryId, String docId, Map<String, List<Hit>> hits) {
+        super(queryId, docId);
         this.hits = new TreeMap<>(hits);
     }
 
@@ -67,9 +67,10 @@ public class IntervalsQueryMatch extends QueryMatch {
         return hits.size();
     }
 
-    public static IntervalsQueryMatch merge(String queryId, IntervalsQueryMatch... matches) {
-        IntervalsQueryMatch newMatch = new IntervalsQueryMatch(queryId, EMPTYMAP);
+    public static IntervalsQueryMatch merge(String queryId, String docId, IntervalsQueryMatch... matches) {
+        IntervalsQueryMatch newMatch = new IntervalsQueryMatch(queryId, docId, EMPTYMAP);
         for (IntervalsQueryMatch match : matches) {
+            assert newMatch.getDocId().equals(match.getDocId());
             for (String field : match.getFields()) {
                 if (!newMatch.hits.containsKey(field))
                     newMatch.hits.put(field, new ArrayList<Hit>());

@@ -44,7 +44,7 @@ public class TestIntervalsMatches {
 
     public static InputDocument buildDoc(String id, String text) {
         return InputDocument.builder(id)
-                .addField(textfield, text, WHITESPACE)
+                .addField(textfield, text)
                 .build();
     }
 
@@ -59,11 +59,14 @@ public class TestIntervalsMatches {
         MonitorQuery mq = new MonitorQuery("query1", "test");
         monitor.update(mq);
 
-        Matches<IntervalsQueryMatch> matcher = monitor.match(buildDoc("doc1", "this is a test document"), IntervalsMatcher.FACTORY);
+        DocumentBatch batch = new DocumentBatch(WHITESPACE);
+        batch.addInputDocument(buildDoc("doc1", "this is a test document"));
+
+        Matches<IntervalsQueryMatch> matcher = monitor.match(batch, IntervalsMatcher.FACTORY);
 
         assertThat(matcher)
                 .hasMatchCount(1)
-                .matchesQuery("query1")
+                .matchesQuery("query1", "doc1")
                     .inField(textfield)
                         .withHit(new IntervalsQueryMatch.Hit(3, 10, 3, 14));
 
@@ -72,18 +75,19 @@ public class TestIntervalsMatches {
     @Test
     public void multiFieldQueryMatches() throws IOException {
 
+        DocumentBatch batch = new DocumentBatch(WHITESPACE);
         InputDocument doc = InputDocument.builder("doc1")
-                .addField("field1", "this is a test of field one", WHITESPACE)
-                .addField("field2", "and this is an additional test", WHITESPACE)
+                .addField("field1", "this is a test of field one")
+                .addField("field2", "and this is an additional test")
                 .build();
 
         monitor.update(new MonitorQuery("query1", "field1:test field2:test"));
 
-        Matches<IntervalsQueryMatch> matcher = monitor.match(doc, IntervalsMatcher.FACTORY);
+        Matches<IntervalsQueryMatch> matcher = monitor.match(batch, IntervalsMatcher.FACTORY);
 
         assertThat(matcher)
                 .hasMatchCount(1)
-                .matchesQuery("query1")
+                .matchesQuery("query1", "doc1")
                     .inField("field1")
                         .withHit(new IntervalsQueryMatch.Hit(3, 10, 3, 14))
                     .inField("field2")
@@ -94,25 +98,21 @@ public class TestIntervalsMatches {
     @Test
     public void testHighlighterQuery() throws IOException {
 
-        InputDocument docWithMatch = buildDoc("1", "this is a test document");
-        InputDocument docWithNoMatch = buildDoc("2", "this is a document");
-        InputDocument docWithNoHighlighterMatch = buildDoc("3", "this is a test");
+        monitor.update(new MonitorQuery("q1", "test", "document"));
 
-        monitor.update(new MonitorQuery("1", "test", "document"));
+        DocumentBatch batch = new DocumentBatch(WHITESPACE);
+        batch.addInputDocument(buildDoc("1", "this is a test document"));
+        batch.addInputDocument(buildDoc("2", "this is a document"));
+        batch.addInputDocument(buildDoc("3", "this is a test"));
 
-        assertThat(monitor.match(docWithNoHighlighterMatch, IntervalsMatcher.FACTORY))
-                .matchesQuery("1").inField(textfield)
-                .withHit(new IntervalsQueryMatch.Hit(3, 10, 3, 14));
-
-        assertThat(monitor.match(docWithMatch, IntervalsMatcher.FACTORY))
-                .matchesQuery("1")
-                .inField(textfield)
-                .withHit(new IntervalsQueryMatch.Hit(4, 15, 4, 23));
-
-        assertThat(monitor.match(docWithNoMatch, IntervalsMatcher.FACTORY))
-                .doesNotMatchQuery("1");
-
-
+        assertThat(monitor.match(batch, IntervalsMatcher.FACTORY))
+                .matchesQuery("q1", "1")
+                    .inField(textfield)
+                        .withHit(new IntervalsQueryMatch.Hit(3, 10, 3, 14))
+                .matchesQuery("q1", "2")
+                    .inField(textfield)
+                        .withHit(new IntervalsQueryMatch.Hit(4, 15, 4, 23))
+                .doesNotMatchQuery("q1", "3");
 
     }
 
@@ -121,9 +121,11 @@ public class TestIntervalsMatches {
 
         monitor.update(new MonitorQuery("1", "test", "document"));
 
-        Matches<IntervalsQueryMatch> matcher = monitor.match(buildDoc("1", "this is a test document"), IntervalsMatcher.FACTORY);
+        DocumentBatch batch = new DocumentBatch(WHITESPACE);
+        batch.addInputDocument(buildDoc("doc1", "this is a test document"));
+        Matches<IntervalsQueryMatch> matcher = monitor.match(batch, IntervalsMatcher.FACTORY);
 
-        IntervalsQueryMatch match = Iterables.getFirst(matcher, null);
+        IntervalsQueryMatch match = Iterables.getFirst(matcher.getMatches("doc1"), null);
         Assertions.assertThat(match).isNotNull();
         Assertions.assertThat(match.getHitCount()).isEqualTo(1);
     }
@@ -157,7 +159,10 @@ public class TestIntervalsMatches {
                        new MonitorQuery("3", "document"),
                        new MonitorQuery("4", "foo"));
 
-        assertThat(monitor.match(buildDoc("1", "this is a test document"), IntervalsMatcher.FACTORY))
+        DocumentBatch batch = new DocumentBatch(WHITESPACE);
+        batch.addInputDocument(buildDoc("doc1", "this is a test document"));
+
+        assertThat(monitor.match(batch, IntervalsMatcher.FACTORY))
                 .hasQueriesRunCount(4)
                 .hasMatchCount(2)
                 .hasErrorCount(1);
@@ -175,12 +180,15 @@ public class TestIntervalsMatches {
 
         monitor.update(new MonitorQuery("1", ""));
 
-        Matches<IntervalsQueryMatch> matches = monitor.match(buildDoc("1", "hello world"), IntervalsMatcher.FACTORY);
+        DocumentBatch batch = new DocumentBatch(WHITESPACE);
+        batch.addInputDocument(buildDoc("1", "hello world"));
+
+        Matches<IntervalsQueryMatch> matches = monitor.match(batch, IntervalsMatcher.FACTORY);
         assertThat(matches)
                 .hasQueriesRunCount(1)
                 .hasMatchCount(1);
 
-        Assertions.assertThat(matches.matches("1").getHitCount()).isEqualTo(0);
+        Assertions.assertThat(matches.matches("1", "1").getHitCount()).isEqualTo(0);
 
     }
 

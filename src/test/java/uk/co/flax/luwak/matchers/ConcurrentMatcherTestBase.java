@@ -48,10 +48,11 @@ public abstract class ConcurrentMatcherTestBase {
 
         ExecutorService executor = Executors.newFixedThreadPool(10);
 
-        InputDocument doc = InputDocument.builder("1").addField("field", "test", new KeywordAnalyzer()).build();
+        DocumentBatch batch = new DocumentBatch(new KeywordAnalyzer());
+        batch.addInputDocument(InputDocument.builder("1").addField("field", "test").build());
 
         Matches<QueryMatch> matches
-                = monitor.match(doc, matcherFactory(executor, SimpleMatcher.FACTORY, 10));
+                = monitor.match(batch, matcherFactory(executor, SimpleMatcher.FACTORY, 10));
 
         assertThat(matches.getMatchCount()).isEqualTo(1000);
 
@@ -70,17 +71,18 @@ public abstract class ConcurrentMatcherTestBase {
 
         ExecutorService executor = Executors.newFixedThreadPool(4);
 
-        InputDocument doc = InputDocument.builder("1")
-                .addField("field", "test doc doc", new WhitespaceAnalyzer())
-                .build();
+        DocumentBatch batch = new DocumentBatch(new WhitespaceAnalyzer());
+        batch.addInputDocument(InputDocument.builder("1")
+                .addField("field", "test doc doc")
+                .build());
 
         Matches<ScoringMatch> matches
-                = monitor.match(doc, matcherFactory(executor, ScoringMatcher.FACTORY, 10));
+                = monitor.match(batch, matcherFactory(executor, ScoringMatcher.FACTORY, 10));
 
         assertThat(matches.getMatchCount()).isEqualTo(10);
         assertThat(matches.getQueriesRun()).isEqualTo(30);
         assertThat(matches.getErrors()).isEmpty();
-        for (ScoringMatch match : matches) {
+        for (ScoringMatch match : matches.getMatches("1")) {
             // The queries are all split into three by the QueryDecomposer, and the
             // 'test' and 'doc' parts will match.  'test' will have a higher score,
             // because of it's lower termfreq.  We need to check that each query ends
@@ -98,12 +100,13 @@ public abstract class ConcurrentMatcherTestBase {
         Monitor monitor = new Monitor(new TestSlowLog.SlowQueryParser(250), new MatchAllPresearcher());
         monitor.update(new MonitorQuery("1", "slow"), new MonitorQuery("2", "fast"), new MonitorQuery("3", "slow"));
 
-        InputDocument doc1 = InputDocument.builder("doc1").build();
+        DocumentBatch batch = new DocumentBatch(new WhitespaceAnalyzer());
+        batch.addInputDocument(InputDocument.builder("doc1").build());
 
         MatcherFactory<QueryMatch> factory
                 = matcherFactory(executor, SimpleMatcher.FACTORY, 10);
 
-        Matches<QueryMatch> matches = monitor.match(doc1, factory);
+        Matches<QueryMatch> matches = monitor.match(batch, factory);
         assertThat(matches.getMatchCount())
                 .isEqualTo(3);
         System.out.println(matches.getSlowLog());
@@ -113,13 +116,13 @@ public abstract class ConcurrentMatcherTestBase {
                 .doesNotContain("2:");
 
         monitor.setSlowLogLimit(1);
-        assertThat(monitor.match(doc1, factory).getSlowLog())
+        assertThat(monitor.match(batch, factory).getSlowLog())
                 .contains("1:")
                 .contains("2:")
                 .contains("3:");
 
         monitor.setSlowLogLimit(2000000000000l);
-        assertThat(monitor.match(doc1, factory).getSlowLog())
+        assertThat(monitor.match(batch, factory).getSlowLog())
                 .isEmpty();
 
     }
