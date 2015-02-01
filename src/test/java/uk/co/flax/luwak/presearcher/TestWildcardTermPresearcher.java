@@ -40,7 +40,7 @@ public class TestWildcardTermPresearcher extends PresearcherTestBase {
         monitor.update(new MonitorQuery("1", "/hell.*/"));
 
         assertThat(monitor.match(buildDoc("doc1", TEXTFIELD, "well hello there"), SimpleMatcher.FACTORY))
-                .hasMatchCount(1);
+                .hasMatchCount("doc1", 1);
 
     }
 
@@ -77,7 +77,7 @@ public class TestWildcardTermPresearcher extends PresearcherTestBase {
         monitor.update(new MonitorQuery("1", "foo"));
 
         assertThat(monitor.match(buildDoc("doc1", TEXTFIELD, "Foo foo"), SimpleMatcher.FACTORY))
-                .hasMatchCount(1);
+                .hasMatchCount("doc1", 1);
 
     }
 

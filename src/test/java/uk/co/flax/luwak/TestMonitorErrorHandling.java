@@ -80,7 +80,7 @@ public class TestMonitorErrorHandling {
         Matches matcher = monitor.match(batch, SimpleMatcher.FACTORY);
 
         assertThat(matcher.getErrors()).hasSize(1);
-        assertThat(matcher.getMatchCount()).isEqualTo(1);
+        assertThat(matcher.getMatchCount("doc")).isEqualTo(1);
         assertThat(matcher.getQueriesRun()).isEqualTo(2);
     }
 

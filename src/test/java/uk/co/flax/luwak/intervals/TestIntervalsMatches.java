@@ -65,7 +65,7 @@ public class TestIntervalsMatches {
         Matches<IntervalsQueryMatch> matcher = monitor.match(batch, IntervalsMatcher.FACTORY);
 
         assertThat(matcher)
-                .hasMatchCount(1)
+                .hasMatchCount("doc1", 1)
                 .matchesQuery("query1", "doc1")
                     .inField(textfield)
                         .withHit(new IntervalsQueryMatch.Hit(3, 10, 3, 14));
@@ -86,7 +86,7 @@ public class TestIntervalsMatches {
         Matches<IntervalsQueryMatch> matcher = monitor.match(batch, IntervalsMatcher.FACTORY);
 
         assertThat(matcher)
-                .hasMatchCount(1)
+                .hasMatchCount("doc1", 1)
                 .matchesQuery("query1", "doc1")
                     .inField("field1")
                         .withHit(new IntervalsQueryMatch.Hit(3, 10, 3, 14))
@@ -164,7 +164,7 @@ public class TestIntervalsMatches {
 
         assertThat(monitor.match(batch, IntervalsMatcher.FACTORY))
                 .hasQueriesRunCount(4)
-                .hasMatchCount(2)
+                .hasMatchCount("doc1", 2)
                 .hasErrorCount(1);
     }
 
@@ -186,7 +186,7 @@ public class TestIntervalsMatches {
         Matches<IntervalsQueryMatch> matches = monitor.match(batch, IntervalsMatcher.FACTORY);
         assertThat(matches)
                 .hasQueriesRunCount(1)
-                .hasMatchCount(1);
+                .hasMatchCount("1", 1);
 
         Assertions.assertThat(matches.matches("1", "1").getHitCount()).isEqualTo(0);
 

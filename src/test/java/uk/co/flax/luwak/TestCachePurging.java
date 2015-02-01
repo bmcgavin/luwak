@@ -57,18 +57,18 @@ public class TestCachePurging {
 
         DocumentBatch batch = new DocumentBatch(new WhitespaceAnalyzer());
         batch.addInputDocument(InputDocument.builder("doc1").addField("field", "test1 test2 test3").build());
-        assertThat(monitor.match(batch, SimpleMatcher.FACTORY).getMatchCount()).isEqualTo(3);
+        assertThat(monitor.match(batch, SimpleMatcher.FACTORY).getMatchCount("doc1")).isEqualTo(3);
 
         monitor.deleteById("1");
         assertThat(monitor.getQueryCount()).isEqualTo(2);
         assertThat(monitor.getStats().cachedQueries).isEqualTo(4);
-        assertThat(monitor.match(batch, SimpleMatcher.FACTORY).getMatchCount()).isEqualTo(2);
+        assertThat(monitor.match(batch, SimpleMatcher.FACTORY).getMatchCount("doc1")).isEqualTo(2);
 
         monitor.purgeCache();
         assertThat(monitor.getStats().cachedQueries).isEqualTo(2);
 
         Matches<QueryMatch> result = monitor.match(batch, SimpleMatcher.FACTORY);
-        assertThat(result.getMatchCount()).isEqualTo(2);
+        assertThat(result.getMatchCount("doc1")).isEqualTo(2);
     }
 
     @Test
@@ -128,7 +128,7 @@ public class TestCachePurging {
 
             Matches<QueryMatch> matcher = monitor.match(batch, SimpleMatcher.FACTORY);
             assertThat(matcher.getErrors()).isEmpty();
-            assertThat(matcher.getMatchCount()).isEqualTo(340);
+            assertThat(matcher.getMatchCount("doc1")).isEqualTo(340);
 
 
         }

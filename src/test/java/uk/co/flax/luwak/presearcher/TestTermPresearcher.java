@@ -40,7 +40,7 @@ public class TestTermPresearcher extends PresearcherTestBase {
 
         Matches<QueryMatch> matcher = monitor.match(buildDoc("doc1", TEXTFIELD, "this is a test document"), SimpleMatcher.FACTORY);
         assertThat(matcher)
-                .hasMatchCount(1)
+                .hasMatchCount("doc1", 1)
                 .hasQueriesRunCount(1);
 
     }
@@ -51,11 +51,11 @@ public class TestTermPresearcher extends PresearcherTestBase {
         monitor.update(new MonitorQuery("1", "document -test"));
 
         assertThat(monitor.match(buildDoc("doc1", TEXTFIELD, "this is a test document"), SimpleMatcher.FACTORY))
-                .hasMatchCount(0)
+                .hasMatchCount("doc1", 0)
                 .hasQueriesRunCount(1);
 
         assertThat(monitor.match(buildDoc("doc2", TEXTFIELD, "weeble sclup test"), SimpleMatcher.FACTORY))
-                .hasMatchCount(0)
+                .hasMatchCount("doc2", 0)
                 .hasQueriesRunCount(0);
     }
 
@@ -65,7 +65,7 @@ public class TestTermPresearcher extends PresearcherTestBase {
         monitor.update(new MonitorQuery("1", "/hell./"));
 
         assertThat(monitor.match(buildDoc("doc1", TEXTFIELD, "hello"), SimpleMatcher.FACTORY))
-                .hasMatchCount(1)
+                .hasMatchCount("doc1", 1)
                 .hasQueriesRunCount(1);
 
     }

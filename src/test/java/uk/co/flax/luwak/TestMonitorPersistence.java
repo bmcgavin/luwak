@@ -57,7 +57,7 @@ public class TestMonitorPersistence {
         batch.addInputDocument(InputDocument.builder("doc1").addField("f", "test").build());
 
         assertThat(monitor.match(batch, SimpleMatcher.FACTORY))
-                .hasMatchCount(4);
+                .hasMatchCount("doc1", 4);
 
         monitor.close();
 
@@ -65,7 +65,7 @@ public class TestMonitorPersistence {
                                         new MMapDirectory(indexDirectory));
 
         Assertions.assertThat(monitor2.getQueryCount()).isEqualTo(4);
-        assertThat(monitor2.match(batch, SimpleMatcher.FACTORY)).hasMatchCount(4);
+        assertThat(monitor2.match(batch, SimpleMatcher.FACTORY)).hasMatchCount("doc1", 4);
 
     }
 

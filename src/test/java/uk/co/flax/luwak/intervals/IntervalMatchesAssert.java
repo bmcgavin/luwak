@@ -42,8 +42,8 @@ public class IntervalMatchesAssert extends AbstractAssert<IntervalMatchesAssert,
         return new IntervalMatchesAssert(actual);
     }
 
-    public IntervalMatchesAssert hasMatchCount(int count) {
-        Assertions.assertThat(actual.getMatchCount()).isEqualTo(count);
+    public IntervalMatchesAssert hasMatchCount(String docId, int count) {
+        Assertions.assertThat(actual.getMatchCount(docId)).isEqualTo(count);
         return this;
     }
 

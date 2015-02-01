@@ -53,15 +53,15 @@ public class TestMultipassPresearcher extends PresearcherTestBase {
         monitor.update(new MonitorQuery("1", "field:(+foo +bar +(badger cormorant))"));
 
         assertThat(monitor.match(buildDoc("doc1", "field", "a badger walked into a bar"), SimpleMatcher.FACTORY))
-                .hasMatchCount(0)
+                .hasMatchCount("doc1", 0)
                 .hasQueriesRunCount(0);
 
         assertThat(monitor.match(buildDoc("doc2", "field", "foo badger cormorant"), SimpleMatcher.FACTORY))
-                .hasMatchCount(0)
+                .hasMatchCount("doc2", 0)
                 .hasQueriesRunCount(0);
 
         assertThat(monitor.match(buildDoc("doc3", "field", "bar badger foo"), SimpleMatcher.FACTORY))
-                .hasMatchCount(1);
+                .hasMatchCount("doc3", 1);
 
     }
 }
