@@ -125,6 +125,7 @@
                 </executions>
                 <configuration>
                     <quiet>true</quiet>
+                    <additionalparam>-Xdoclint:none</additionalparam>
                 </configuration>
             </plugin>
             <plugin>
