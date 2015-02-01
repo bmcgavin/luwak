@@ -51,17 +51,16 @@ public class HighlightingMatcher extends CandidateMatcher<HighlightsMatch> {
     protected void doMatchQuery(String queryId, Query matchQuery, Map<String, String> metadata) throws IOException {
         HighlightsMatch match = doMatch(queryId, matchQuery);
         if (match != null)
-            this.addMatch(queryId, match);
+            this.addMatch(match);
     }
 
-    protected void addMatch(String queryId, HighlightsMatch match) {
-        HighlightsMatch previousMatch = this.matches(queryId, match.getDocId());
+    protected void addMatch(HighlightsMatch match) {
+        HighlightsMatch previousMatch = this.matches(match.getDocId(), match.getDocId());
         if (previousMatch == null) {
-            super.addMatch(queryId, match.getDocId(), match);
+            super.addMatch(match);
             return;
         }
-        super.addMatch(queryId, previousMatch.getDocId(),
-                HighlightsMatch.merge(queryId, previousMatch.getDocId(), previousMatch, match));
+        super.addMatch(HighlightsMatch.merge(match.getQueryId(), match.getDocId(), previousMatch, match));
     }
 
     public HighlightsMatch resolve(HighlightsMatch match1, HighlightsMatch match2) {

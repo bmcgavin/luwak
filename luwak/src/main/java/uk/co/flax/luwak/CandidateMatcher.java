@@ -71,11 +71,7 @@ public abstract class CandidateMatcher<T extends QueryMatch> {
 
     protected abstract void doMatchQuery(String queryId, Query matchQuery, Map<String, String> metadata) throws IOException;
 
-    protected void addMatch(String queryId, int docId, T match) {
-        addMatch(queryId, docs.resolveDocId(docId), match);
-    }
-
-    protected void addMatch(String queryId, String docId, T match) {
+    private void addMatch(String queryId, String docId, T match) {
         MatchHolder<T> docMatches = matches.get(docId);
         if (docMatches == null) {
             docMatches = new MatchHolder<>();

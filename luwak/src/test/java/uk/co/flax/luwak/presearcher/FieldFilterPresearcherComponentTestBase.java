@@ -46,12 +46,13 @@ public abstract class FieldFilterPresearcherComponentTestBase extends Presearche
     }
 
     @Test
-    public void testFieldFiltering() throws IOException {
+    public void testBatchFiltering() throws IOException {
 
         monitor.update(new MonitorQuery("1", "test", ImmutableMap.of("language", "en")),
-                       new MonitorQuery("2", "test", ImmutableMap.of("language", "de")),
-                       new MonitorQuery("3", "wibble", ImmutableMap.of("language", "en")),
-                       new MonitorQuery("4", "*:*", ImmutableMap.of("language", "de")));
+                new MonitorQuery("2", "test", ImmutableMap.of("language", "de")),
+                new MonitorQuery("3", "wibble", ImmutableMap.of("language", "en")),
+                new MonitorQuery("4", "*:*", ImmutableMap.of("language", "de")),
+                new MonitorQuery("5", "*:*", ImmutableMap.of("language", "es")));
 
         DocumentBatch batch = new DocumentBatch(WHITESPACE);
         batch.addInputDocument(InputDocument.builder("enDoc")
@@ -71,31 +72,56 @@ public abstract class FieldFilterPresearcherComponentTestBase extends Presearche
         assertThat(monitor.match(batch, SimpleMatcher.FACTORY))
                 .matchesQuery("1", "enDoc")
                 .hasMatchCount("enDoc", 1)
+                .hasMatchCount("deDoc", 2)
+                .hasMatchCount("bothDoc", 3)
+                .hasQueriesRunCount(3);
+
+    }
+
+    @Test
+    public void testFieldFiltering() throws IOException {
+
+        monitor.update(new MonitorQuery("1", "test", ImmutableMap.of("language", "en")),
+                       new MonitorQuery("2", "test", ImmutableMap.of("language", "de")),
+                       new MonitorQuery("3", "wibble", ImmutableMap.of("language", "en")),
+                       new MonitorQuery("4", "*:*", ImmutableMap.of("language", "de")));
+
+        DocumentBatch enBatch = new DocumentBatch(WHITESPACE);
+        enBatch.addInputDocument(InputDocument.builder("enDoc")
+                .addField(TEXTFIELD, "this is a test")
+                .addField("language", "en")
+                .build());
+
+        assertThat(monitor.match(enBatch, SimpleMatcher.FACTORY))
+                .matchesQuery("1", "enDoc")
+                .hasMatchCount("enDoc", 1)
                 .hasQueriesRunCount(1);
 
-        /*
         InputDocument deDoc = InputDocument.builder("deDoc")
                 .addField(TEXTFIELD, "das ist ein test")
                 .addField("language", "de")
                 .build();
-        assertThat(monitor.match(deDoc, SimpleMatcher.FACTORY))
-                .matchesQuery("2")
-                .matchesQuery("4")
-                .hasMatchCount(2)
+        DocumentBatch deBatch = new DocumentBatch(WHITESPACE);
+        deBatch.addInputDocument(deDoc);
+        assertThat(monitor.match(deBatch, SimpleMatcher.FACTORY))
+                .matchesQuery("2", "deDoc")
+                .matchesQuery("4", "deDoc")
+                .hasMatchCount("deDoc", 2)
                 .hasQueriesRunCount(2);
 
-        InputDocument bothDoc = InputDocument.builder("bothDoc")
+        DocumentBatch bothBatch = new DocumentBatch(WHITESPACE);
+        bothBatch.addInputDocument(InputDocument.builder("bothDoc")
                 .addField(TEXTFIELD, "this is ein test")
-                .addField("language", "en", WHITESPACE)
-                .addField("language", "de", WHITESPACE)
-                .build();
-        assertThat(monitor.match(bothDoc, SimpleMatcher.FACTORY))
-                .matchesQuery("1")
-                .matchesQuery("2")
-                .matchesQuery("4")
-                .hasMatchCount(3)
+                .addField("language", "en")
+                .addField("language", "de")
+                .build());
+        assertThat(monitor.match(bothBatch, SimpleMatcher.FACTORY))
+                .matchesQuery("1", "bothDoc")
+                .matchesQuery("2", "bothDoc")
+                .matchesQuery("4", "bothDoc")
+                .hasMatchCount("bothDoc", 3)
                 .hasQueriesRunCount(3);
-                */
+
     }
 
     @Test
