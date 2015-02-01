@@ -51,16 +51,19 @@ public class TestSimilarities {
             };
 
             InputDocument doc = InputDocument.builder("doc")
-                    .addField("field", "this is a test", ANALYZER).build();
+                    .addField("field", "this is a test").build();
+            DocumentBatch batch = new DocumentBatch(new WhitespaceAnalyzer());
+            batch.addInputDocument(doc);
+
             InputDocument docWithSim = InputDocument.builder("docWithSim")
-                    .addField("field", "this is a test", ANALYZER)
+                    .addField("field", "this is a test")
                     .setSimilarity(similarity).build();
 
-            Matches<ScoringMatch> standard = monitor.match(doc, ScoringMatcher.FACTORY);
-            Matches<ScoringMatch> withSim = monitor.match(docWithSim, ScoringMatcher.FACTORY);
+            Matches<ScoringMatch> standard = monitor.match(batch, ScoringMatcher.FACTORY);
+            Matches<ScoringMatch> withSim = monitor.match(batch, ScoringMatcher.FACTORY);
 
-            assertThat(Iterables.getFirst(standard, null).getScore())
-                    .isEqualTo(Iterables.getFirst(withSim, null).getScore() / 1000);
+            assertThat(Iterables.getFirst(standard.getMatches("doc"), null).getScore())
+                    .isEqualTo(Iterables.getFirst(withSim.getMatches("doc"), null).getScore() / 1000);
         }
     }
 }

@@ -1,17 +1,12 @@
 package uk.co.flax.luwak.matchers;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.lucene.index.LeafReaderContext;
-import org.apache.lucene.search.Collector;
-import org.apache.lucene.search.LeafCollector;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.Scorer;
-import org.apache.lucene.search.spans.SpanQuery;
+import org.apache.lucene.search.*;
 import uk.co.flax.luwak.CandidateMatcher;
-import uk.co.flax.luwak.InputDocument;
+import uk.co.flax.luwak.DocumentBatch;
 import uk.co.flax.luwak.QueryMatch;
 
 /*
@@ -40,35 +35,34 @@ public abstract class CollectingMatcher<T extends QueryMatch> extends CandidateM
     /**
      * Creates a new CollectingMatcher for the supplied InputDocument
      *
-     * @param doc the document to run queries against
+     * @param docs the documents to run queries against
      */
-    public CollectingMatcher(InputDocument doc) {
-        super(doc);
+    public CollectingMatcher(DocumentBatch docs) {
+        super(docs);
     }
 
     @Override
-    protected T doMatchQuery(final String queryId, Query matchQuery, Map<String, String> metadata) throws IOException {
+    protected void doMatchQuery(final String queryId, Query matchQuery, Map<String, String> metadata) throws IOException {
 
         MatchCollector coll = new MatchCollector(queryId);
 
         long t = System.nanoTime();
-        doc.getSearcher().search(matchQuery, coll);
+        IndexSearcher searcher = docs.getSearcher();
+        searcher.search(matchQuery, coll);
         t = System.nanoTime() - t;
         this.slowlog.addQuery(queryId, t);
 
-        if (coll.match != null)
-            addMatch(queryId, coll.match);
-        return coll.match;
     }
 
     /**
-     * Called when a query matches the InputDocument
+     * Called when a query matches an InputDocument
      * @param queryId the query ID
+     * @param doc the docId for the InputDocument in the DocumentBatch
      * @param scorer the Scorer for this query
      * @return a match object
      * @throws IOException on IO error
      */
-    protected abstract T doMatch(String queryId, Scorer scorer) throws IOException;
+    protected abstract T doMatch(String queryId, int doc, Scorer scorer) throws IOException;
 
     protected class MatchCollector implements Collector {
 
@@ -101,7 +95,9 @@ public abstract class CollectingMatcher<T extends QueryMatch> extends CandidateM
 
             @Override
             public void collect(int doc) throws IOException {
-                match = doMatch(queryId, scorer);
+                match = doMatch(queryId, doc, scorer);
+                if (match != null)
+                    addMatch(match);
             }
 
         }

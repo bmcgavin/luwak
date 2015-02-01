@@ -39,26 +39,28 @@ public class TestPresearcherMatchCollector {
             monitor.update(new MonitorQuery("3", "foo -test"));
             monitor.update(new MonitorQuery("4", "baz"));
 
+            DocumentBatch batch = new DocumentBatch(new WhitespaceAnalyzer());
             InputDocument doc = InputDocument.builder("doc1")
-                    .addField(TEXTFIELD, "this is a foo test", new WhitespaceAnalyzer())
+                    .addField(TEXTFIELD, "this is a foo test")
                     .build();
+            batch.addInputDocument(doc);
 
-            PresearcherMatches<QueryMatch> matches = monitor.debug(doc, SimpleMatcher.FACTORY);
+            PresearcherMatches<QueryMatch> matches = monitor.debug(batch, SimpleMatcher.FACTORY);
 
-            assertThat(matches.match("1")).isNotNull();
-            assertThat(matches.match("1").presearcherMatches).isEqualTo(" f:test");
-            assertThat(matches.match("1").queryMatch)
+            assertThat(matches.match("1", "doc1")).isNotNull();
+            assertThat(matches.match("1", "doc1").presearcherMatches).isEqualTo(" f:test");
+            assertThat(matches.match("1", "doc1").queryMatch)
                     .isNotNull()
                     .isInstanceOf(QueryMatch.class);
 
-            assertThat(matches.match("2")).isNotNull();
-            assertThat(matches.match("2").presearcherMatches).isEqualTo(" f:foo");
+            assertThat(matches.match("2", "doc1")).isNotNull();
+            assertThat(matches.match("2", "doc1").presearcherMatches).isEqualTo(" f:foo");
 
-            assertThat(matches.match("3")).isNotNull();
-            assertThat(matches.match("3").presearcherMatches).isEqualTo(" f:foo");
-            assertThat(matches.match("3").queryMatch).isNull();
+            assertThat(matches.match("3", "doc1")).isNotNull();
+            assertThat(matches.match("3", "doc1").presearcherMatches).isEqualTo(" f:foo");
+            assertThat(matches.match("3", "doc1").queryMatch).isNull();
 
-            assertThat(matches.match("4")).isNull();
+            assertThat(matches.match("4", "doc1")).isNull();
         }
     }
 }

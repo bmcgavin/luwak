@@ -46,7 +46,8 @@ public class TestMonitorPersistence {
     @Test
     public void testCacheIsRepopulated() throws IOException {
 
-        InputDocument doc = InputDocument.builder("doc1").addField("f", "test", new KeywordAnalyzer()).build();
+        DocumentBatch batch = new DocumentBatch(new KeywordAnalyzer());
+        batch.addInputDocument(InputDocument.builder("doc1").addField("f", "test").build());
 
         try (Monitor monitor = new Monitor(new LuceneQueryParser("f"), new TermFilteredPresearcher(),
                                         new MMapDirectory(indexDirectory))) {
@@ -55,15 +56,18 @@ public class TestMonitorPersistence {
                 new MonitorQuery("3", "test", ImmutableMap.of("language", "en")),
                 new MonitorQuery("4", "test", ImmutableMap.of("language", "en", "wibble", "quack")));
 
-            assertThat(monitor.match(doc, SimpleMatcher.FACTORY))
+            assertThat(monitor.match(batch, SimpleMatcher.FACTORY))
                     .hasMatchCount(4);
+
         }
 
         try (Monitor monitor2 = new Monitor(new LuceneQueryParser("f"), new TermFilteredPresearcher(),
-            new MMapDirectory(indexDirectory))) {
+                                        new MMapDirectory(indexDirectory))) {
+
             Assertions.assertThat(monitor2.getQueryCount()).isEqualTo(4);
-            assertThat(monitor2.match(doc, SimpleMatcher.FACTORY)).hasMatchCount(4);
+            assertThat(monitor2.match(batch, SimpleMatcher.FACTORY)).hasMatchCount(4);
         }
+
     }
 
     @After

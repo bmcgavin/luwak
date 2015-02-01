@@ -5,8 +5,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.lucene.analysis.Analyzer;
@@ -55,29 +53,32 @@ public class TestMonitor {
     public void singleTermQueryMatchesSingleDocument() throws IOException {
 
         String document = "This is a test document";
-        InputDocument doc = InputDocument.builder("doc1")
-                .addField(TEXTFIELD, document, WHITESPACE)
-                .build();
+
+        DocumentBatch batch = new DocumentBatch(WHITESPACE);
+        batch.addInputDocument(InputDocument.builder("doc1")
+                .addField(TEXTFIELD, document)
+                .build());
 
         monitor.update(new MonitorQuery("query1", "test"));
 
-        assertThat(monitor.match(doc, SimpleMatcher.FACTORY))
-                .matches("doc1")
+        assertThat(monitor.match(batch, SimpleMatcher.FACTORY))
+                .matchesDoc("doc1")
                 .hasMatchCount(1)
-                .matchesQuery("query1");
+                .matchesQuery("query1", "doc1");
 
     }
 
     @Test
     public void matchStatisticsAreReported() throws IOException {
         String document = "This is a test document";
-        InputDocument doc = InputDocument.builder("doc1")
-                .addField(TEXTFIELD, document, WHITESPACE)
-                .build();
+        DocumentBatch batch = new DocumentBatch(WHITESPACE);
+        batch.addInputDocument(InputDocument.builder("doc1")
+                .addField(TEXTFIELD, document)
+                .build());
 
         monitor.update(new MonitorQuery("query1", "test"));
 
-        Matches<QueryMatch> matches = monitor.match(doc, SimpleMatcher.FACTORY);
+        Matches<QueryMatch> matches = monitor.match(batch, SimpleMatcher.FACTORY);
         Assertions.assertThat(matches.getQueriesRun()).isEqualTo(1);
         Assertions.assertThat(matches.getQueryBuildTime()).isGreaterThan(-1);
         Assertions.assertThat(matches.getSearchTime()).isGreaterThan(-1);
@@ -89,10 +90,11 @@ public class TestMonitor {
 
         monitor.update(new MonitorQuery("query1", "that"));
 
-        InputDocument doc = InputDocument.builder("doc1").addField(TEXTFIELD, "that", WHITESPACE).build();
-        assertThat(monitor.match(doc, SimpleMatcher.FACTORY))
+        DocumentBatch batch = new DocumentBatch(WHITESPACE);
+        batch.addInputDocument(InputDocument.builder("doc1").addField(TEXTFIELD, "that").build());
+        assertThat(monitor.match(batch, SimpleMatcher.FACTORY))
                 .hasQueriesRunCount(1)
-                .matchesQuery("query1");
+                .matchesQuery("query1", "doc1");
     }
 
     @Test
@@ -105,10 +107,11 @@ public class TestMonitor {
         monitor.deleteById("query2", "query1");
         Assertions.assertThat(monitor.getQueryCount()).isEqualTo(1);
 
-        InputDocument doc = InputDocument.builder("doc1").addField(TEXTFIELD, "other things", WHITESPACE).build();
-        assertThat(monitor.match(doc, SimpleMatcher.FACTORY))
+        DocumentBatch batch = new DocumentBatch(WHITESPACE);
+        batch.addInputDocument(InputDocument.builder("doc1").addField(TEXTFIELD, "other things").build());
+        assertThat(monitor.match(batch, SimpleMatcher.FACTORY))
                 .hasQueriesRunCount(1)
-                .matchesQuery("query3");
+                .matchesQuery("query3", "doc1");
 
     }
 
@@ -139,8 +142,9 @@ public class TestMonitor {
         monitor.clear();
         Assertions.assertThat(monitor.getQueryCount()).isEqualTo(0);
 
-        InputDocument doc = InputDocument.builder("doc1").addField(TEXTFIELD, "other things", WHITESPACE).build();
-        Matches<QueryMatch> matches = monitor.match(doc, SimpleMatcher.FACTORY);
+        DocumentBatch batch = new DocumentBatch(WHITESPACE);
+        batch.addInputDocument(InputDocument.builder("doc1").addField(TEXTFIELD, "other things").build());
+        Matches<QueryMatch> matches = monitor.match(batch, SimpleMatcher.FACTORY);
 
         Assertions.assertThat(matches.getQueriesRun()).isEqualTo(0);
     }
@@ -181,16 +185,16 @@ public class TestMonitor {
 
             monitor.update(new MonitorQuery(Integer.toString(1), "+test " + Integer.toString(1), metadataMap));
 
-            InputDocument doc = InputDocument.builder("1").addField("field", "test", new KeywordAnalyzer()).build();
+            DocumentBatch batch = new DocumentBatch(new KeywordAnalyzer());
+            batch.addInputDocument(InputDocument.builder("1").addField("field", "test").build());
 
             MatcherFactory<QueryMatch> testMatcherFactory = new MatcherFactory<QueryMatch>() {
                 @Override
-                public CandidateMatcher<QueryMatch> createMatcher(InputDocument doc) {
-                    return new CandidateMatcher<QueryMatch>(doc) {
+                public CandidateMatcher<QueryMatch> createMatcher(DocumentBatch docs) {
+                    return new CandidateMatcher<QueryMatch>(docs) {
                         @Override
-                        protected QueryMatch doMatchQuery(String queryId, Query matchQuery, Map<String, String> metadata) throws IOException {
+                        protected void doMatchQuery(String queryId, Query matchQuery, Map<String, String> metadata) throws IOException {
                             Assertions.assertThat(metadata.get("key")).isEqualTo("value");
-                            return null;
                         }
 
                         @Override
@@ -201,8 +205,15 @@ public class TestMonitor {
                 }
             };
 
-            monitor.match(doc, testMatcherFactory);
+            monitor.match(batch, testMatcherFactory);
         }
+    }
+
+    @Test
+    public void testDocumentBatching() throws IOException {
+
+
+
     }
 
     static final Analyzer WHITESPACE = new WhitespaceAnalyzer();

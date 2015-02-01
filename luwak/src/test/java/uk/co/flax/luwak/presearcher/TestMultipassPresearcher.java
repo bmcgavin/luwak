@@ -51,14 +51,11 @@ public class TestMultipassPresearcher extends PresearcherTestBase {
                        new MonitorQuery("3", "field:\"hello there world\""),
                        new MonitorQuery("4", "field:\"this and that\""));
 
-        InputDocument doc = InputDocument.builder("doc1")
-                .addField("field", "hello world and goodbye", WHITESPACE)
-                .build();
-
-        Matches<QueryMatch> matches = monitor.match(doc, SimpleMatcher.FACTORY);
+        Matches<QueryMatch> matches = monitor.match(buildDoc("doc1", "field", "hello world and goodbye"),
+                                                        SimpleMatcher.FACTORY);
         assertThat(matches)
                 .hasQueriesRunCount(2)
-                .matchesQuery("1");
+                .matchesQuery("1", "doc1");
 
     }
 
@@ -67,18 +64,15 @@ public class TestMultipassPresearcher extends PresearcherTestBase {
 
         monitor.update(new MonitorQuery("1", "field:(+foo +bar +(badger cormorant))"));
 
-        InputDocument doc1 = buildDoc("doc1", "field", "a badger walked into a bar");
-        assertThat(monitor.match(doc1, SimpleMatcher.FACTORY))
+        assertThat(monitor.match(buildDoc("doc1", "field", "a badger walked into a bar"), SimpleMatcher.FACTORY))
                 .hasMatchCount(0)
                 .hasQueriesRunCount(0);
 
-        InputDocument doc2 = buildDoc("doc2", "field", "foo badger cormorant");
-        assertThat(monitor.match(doc2, SimpleMatcher.FACTORY))
+        assertThat(monitor.match(buildDoc("doc2", "field", "foo badger cormorant"), SimpleMatcher.FACTORY))
                 .hasMatchCount(0)
                 .hasQueriesRunCount(0);
 
-        InputDocument doc3 = buildDoc("doc3", "field", "bar badger foo");
-        assertThat(monitor.match(doc3, SimpleMatcher.FACTORY))
+        assertThat(monitor.match(buildDoc("doc3", "field", "bar badger foo"), SimpleMatcher.FACTORY))
                 .hasMatchCount(1);
 
     }
@@ -99,9 +93,11 @@ public class TestMultipassPresearcher extends PresearcherTestBase {
 
                 IndexReaderContext ctx = reader.getContext();
                 InputDocument doc = InputDocument.builder("doc1")
-                        .addField("f", "this is a test document", new WhitespaceAnalyzer()).build();
+                        .addField("f", "this is a test document").build();
+                DocumentBatch docs = new DocumentBatch(new WhitespaceAnalyzer());
+                docs.addInputDocument(doc);
 
-                BooleanQuery q = (BooleanQuery) presearcher.buildQuery((LeafReader)doc.getSearcher().getIndexReader(), ctx);
+                BooleanQuery q = (BooleanQuery) presearcher.buildQuery(docs.getIndexReader(), ctx);
                 IndexSearcher searcher = new IndexSearcher(ctx);
                 Weight w = searcher.createNormalizedWeight(q, true);
 

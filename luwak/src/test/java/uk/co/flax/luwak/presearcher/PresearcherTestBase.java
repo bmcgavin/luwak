@@ -6,8 +6,11 @@ import java.util.Map;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.NumericTokenStream;
 import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.core.KeywordAnalyzer;
 import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
 import org.apache.lucene.analysis.tokenattributes.TermToBytesRefAttribute;
+import org.apache.lucene.document.Field;
+import org.apache.lucene.document.IntField;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.MatchAllDocsQuery;
@@ -59,8 +62,10 @@ public abstract class PresearcherTestBase {
 
     public static final Analyzer WHITESPACE = new WhitespaceAnalyzer();
 
-    public static InputDocument buildDoc(String id, String field, String text) {
-        return InputDocument.builder(id).addField(field, text, WHITESPACE).build();
+    public static DocumentBatch buildDoc(String id, String field, String text) throws IOException {
+        DocumentBatch batch = new DocumentBatch(WHITESPACE);
+        batch.addInputDocument(InputDocument.builder(id).addField(field, text).build());
+        return batch;
     }
 
     @Test
@@ -68,9 +73,7 @@ public abstract class PresearcherTestBase {
 
         monitor.update(new MonitorQuery("1", "field_1:test"));
 
-        InputDocument doc = InputDocument.builder("doc1").addField("field_2", "test", WHITESPACE).build();
-
-        assertThat(monitor.match(doc, SimpleMatcher.FACTORY))
+        assertThat(monitor.match(buildDoc("doc1", "field_2", "test"), SimpleMatcher.FACTORY))
                 .hasMatchCount(0);
 
     }
@@ -79,9 +82,7 @@ public abstract class PresearcherTestBase {
     public void testEmptyMonitorHandling() throws IOException {
 
         monitor.clear();
-        InputDocument doc = InputDocument.builder("doc1").addField("field_2", "test", WHITESPACE).build();
-
-        assertThat(monitor.match(doc, SimpleMatcher.FACTORY))
+        assertThat(monitor.match(buildDoc("doc1", "field_2", "test"), SimpleMatcher.FACTORY))
                 .hasMatchCount(0)
                 .hasQueriesRunCount(0);
 
@@ -92,9 +93,7 @@ public abstract class PresearcherTestBase {
 
         monitor.update(new MonitorQuery("1", "*:*"));
 
-        InputDocument doc = InputDocument.builder("doc1").addField("f", "wibble", WHITESPACE).build();
-
-        assertThat(monitor.match(doc, SimpleMatcher.FACTORY))
+        assertThat(monitor.match(buildDoc("doc1", "f", "wibble"), SimpleMatcher.FACTORY))
                 .hasMatchCount(1);
 
     }
@@ -104,12 +103,10 @@ public abstract class PresearcherTestBase {
 
         monitor.update(new MonitorQuery("1", "*:* -f:foo"));
 
-        InputDocument doc1 = InputDocument.builder("doc1").addField("f", "bar", WHITESPACE).build();
-        assertThat(monitor.match(doc1, SimpleMatcher.FACTORY))
+        assertThat(monitor.match(buildDoc("doc1", "f", "bar"), SimpleMatcher.FACTORY))
                 .hasMatchCount(1);
 
-        InputDocument doc2 = InputDocument.builder("doc2").addField("f", "foo", WHITESPACE).build();
-        assertThat(monitor.match(doc2, SimpleMatcher.FACTORY))
+        assertThat(monitor.match(buildDoc("doc2", "f", "foo"), SimpleMatcher.FACTORY))
                 .hasMatchCount(0);
 
     }
@@ -141,8 +138,8 @@ public abstract class PresearcherTestBase {
         try (Monitor monitor = new Monitor(new TestQueryParser(), presearcher)) {
             monitor.update(new MonitorQuery("1", "testquery"));
 
-            InputDocument doc = buildDoc("1", "f", "wibble");
-            assertThat(monitor.match(doc, SimpleMatcher.FACTORY))
+            DocumentBatch docs = buildDoc("1", "f", "wibble");
+            assertThat(monitor.match(docs, SimpleMatcher.FACTORY))
                 .hasMatchCount(1)
                 .hasQueriesRunCount(1);
         }
@@ -200,9 +197,7 @@ public abstract class PresearcherTestBase {
         Monitor monitor = new Monitor(new NonStringTermQueryParser(), presearcher);
         monitor.update(new MonitorQuery("1", "testquery"));
 
-        InputDocument doc = InputDocument.builder("doc1")
-                .addField("f", new NonStringTokenStream()).build();
-        assertThat(monitor.match(doc, SimpleMatcher.FACTORY))
+        assertThat(monitor.match(buildDoc("1", "f", "wibble"), SimpleMatcher.FACTORY))
                 .hasMatchCount(1)
                 .hasQueriesRunCount(1);
 
@@ -231,11 +226,13 @@ public abstract class PresearcherTestBase {
             for (int i = 8; i <= 15; i++) {
                 NumericTokenStream nts = new NumericTokenStream(1);
                 nts.setIntValue(i);
-                InputDocument doc = InputDocument.builder("doc" + i).addField(TEXTFIELD, nts).build();
-                assertThat(numeric_monitor.match(doc, SimpleMatcher.FACTORY))
-                        .matches("doc" + i)
+                InputDocument doc = InputDocument.builder("doc" + i).addField(new IntField(TEXTFIELD, i, Field.Store.YES)).build();
+                DocumentBatch batch = new DocumentBatch(new KeywordAnalyzer());
+                batch.addInputDocument(doc);
+                assertThat(numeric_monitor.match(batch, SimpleMatcher.FACTORY))
+                        .matchesDoc("doc" + i)
                         .hasMatchCount(1)
-                        .matchesQuery("query" + i);
+                        .matchesQuery("query" + i, "doc" + i);
             }
 
         }

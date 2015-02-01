@@ -52,15 +52,11 @@ public class TestTermPresearcher extends PresearcherTestBase {
         MonitorQuery query3 = new MonitorQuery("3", "\"a document\"");  // will be selected but not match
         monitor.update(query1, query2, query3);
 
-        InputDocument doc = InputDocument.builder("doc1")
-                .addField(TEXTFIELD, "this is a test document", WHITESPACE)
-                .build();
-
-        Matches<QueryMatch> matcher = monitor.match(doc, SimpleMatcher.FACTORY);
+        Matches<QueryMatch> matcher = monitor.match(buildDoc("doc1", TEXTFIELD, "this is a test document"), SimpleMatcher.FACTORY);
         assertThat(matcher)
                 .hasMatchCount(1)
                 .selectedQueries("2", "3")
-                .matchesQuery("2")
+                .matchesQuery("2", "doc1")
                 .hasQueriesRunCount(2);
 
     }
@@ -70,19 +66,11 @@ public class TestTermPresearcher extends PresearcherTestBase {
 
         monitor.update(new MonitorQuery("1", "document -test"));
 
-        InputDocument doc1 = InputDocument.builder("doc1")
-                .addField(TEXTFIELD, "this is a test document", WHITESPACE)
-                .build();
-
-        assertThat(monitor.match(doc1, SimpleMatcher.FACTORY))
+        assertThat(monitor.match(buildDoc("doc1", TEXTFIELD, "this is a test document"), SimpleMatcher.FACTORY))
                 .hasMatchCount(0)
                 .hasQueriesRunCount(1);
 
-        InputDocument doc2 = InputDocument.builder("doc2")
-                .addField(TEXTFIELD, "weeble sclup test", WHITESPACE)
-                .build();
-
-        assertThat(monitor.match(doc2, SimpleMatcher.FACTORY))
+        assertThat(monitor.match(buildDoc("doc2", TEXTFIELD, "weeble sclup test"), SimpleMatcher.FACTORY))
                 .hasMatchCount(0)
                 .hasQueriesRunCount(0);
     }
@@ -92,11 +80,7 @@ public class TestTermPresearcher extends PresearcherTestBase {
 
         monitor.update(new MonitorQuery("1", "/hell./"));
 
-        InputDocument doc = InputDocument.builder("doc1")
-                .addField(TEXTFIELD, "hello", WHITESPACE)
-                .build();
-
-        assertThat(monitor.match(doc, SimpleMatcher.FACTORY))
+        assertThat(monitor.match(buildDoc("doc1", TEXTFIELD, "hello"), SimpleMatcher.FACTORY))
                 .hasMatchCount(1)
                 .hasQueriesRunCount(1);
 
@@ -133,11 +117,11 @@ public class TestTermPresearcher extends PresearcherTestBase {
 
             try (IndexReader reader = DirectoryReader.open(writer, false)) {
 
-                IndexReaderContext ctx = reader.getContext();
-                InputDocument doc = InputDocument.builder("doc1")
-                        .addField("f", "this is a test document", new WhitespaceAnalyzer()).build();
+                DocumentBatch batch = new DocumentBatch(new WhitespaceAnalyzer());
+                batch.addInputDocument(InputDocument.builder("doc1").addField("f", "this is a test document").build());
 
-                BooleanQuery q = (BooleanQuery) presearcher.buildQuery((LeafReader)doc.getSearcher().getIndexReader(), ctx);
+                IndexReaderContext ctx = reader.getContext();
+                BooleanQuery q = (BooleanQuery) presearcher.buildQuery(batch.getIndexReader(), ctx);
                 IndexSearcher searcher = new IndexSearcher(ctx);
                 Weight w = searcher.createNormalizedWeight(q, true);
 

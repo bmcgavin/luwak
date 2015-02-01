@@ -23,42 +23,34 @@ import java.util.*;
  *
  * @param <T> the type of QueryMatch returned
  */
-public class Matches<T extends QueryMatch> implements Iterable<T> {
+public class Matches<T extends QueryMatch> implements Iterable<DocumentMatches<T>> {
 
-    private final String docId;
-
-    private final Map<String, T> matches;
+    private final Map<String, DocumentMatches<T>> matches;
     private final Set<String> presearcherHits;
     private final List<MatchError> errors;
 
     private final long queryBuildTime;
     private final long searchTime;
     private final int queriesRun;
+    private final int batchSize;
 
     private final SlowLog slowlog;
 
-    public Matches(String docId, Set<String> presearcherHits, Map<String, T> matches, List<MatchError> errors,
-                   long queryBuildTime, long searchTime, int queriesRun, SlowLog slowlog) {
-        this.docId = docId;
-        this.presearcherHits = Collections.unmodifiableSet(presearcherHits);
+    public Matches(Map<String, DocumentMatches<T>> matches, Set<String> presearcherHits, List<MatchError> errors,
+                   long queryBuildTime, long searchTime, int queriesRun, int batchSize, SlowLog slowlog) {
         this.matches = Collections.unmodifiableMap(matches);
         this.errors = Collections.unmodifiableList(errors);
+        this.presearcherHits = Collections.unmodifiableSet(presearcherHits);
         this.queryBuildTime = queryBuildTime;
         this.searchTime = searchTime;
         this.queriesRun = queriesRun;
+        this.batchSize = batchSize;
         this.slowlog = slowlog;
     }
 
     @Override
-    public Iterator<T> iterator() {
+    public Iterator<DocumentMatches<T>> iterator() {
         return matches.values().iterator();
-    }
-
-    /**
-     * @return the id of the InputDocument for this CandidateMatcher
-     */
-    public String docId() {
-        return docId;
     }
 
     /**
@@ -66,15 +58,27 @@ public class Matches<T extends QueryMatch> implements Iterable<T> {
      * @param queryId the query id
      * @return the QueryMatch for the given query, or null if it did not match
      */
-    public T matches(String queryId) {
-        return matches.get(queryId);
+    public T matches(String docId, String queryId) {
+        DocumentMatches<T> docMatches = matches.get(docId);
+        if (docMatches == null)
+            return null;
+
+        for (T match : docMatches) {
+            if (match.getQueryId().equals(queryId))
+                return match;
+        }
+
+        return null;
     }
 
     /**
-     * @return all matches
+     * @return all matches for a particular document
      */
-    public Collection<T> getMatches() {
-        return matches.values();
+    public Collection<T> getMatches(String docId) {
+        DocumentMatches<T> docMatches = matches.get(docId);
+        if (docMatches == null)
+            return null;
+        return docMatches.getMatches();
     }
 
     /**
@@ -110,6 +114,13 @@ public class Matches<T extends QueryMatch> implements Iterable<T> {
      */
     public int getQueriesRun() {
         return queriesRun;
+    }
+
+    /**
+     * @return the number of documents in the batch
+     */
+    public int getBatchSize() {
+        return batchSize;
     }
 
     /**

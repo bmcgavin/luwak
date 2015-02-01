@@ -3,6 +3,7 @@ package uk.co.flax.luwak;
 import java.io.IOException;
 import java.util.Map;
 
+import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.search.*;
 import org.apache.lucene.util.Bits;
@@ -77,23 +78,25 @@ public class TestSlowLog {
             monitor.update(new MonitorQuery("1", "slow"), new MonitorQuery("2", "fast"), new MonitorQuery("3", "slow"));
 
             InputDocument doc1 = InputDocument.builder("doc1").build();
+            DocumentBatch batch = new DocumentBatch(new WhitespaceAnalyzer());
+            batch.addInputDocument(doc1);
 
-            Matches<QueryMatch> matches = monitor.match(doc1, SimpleMatcher.FACTORY);
+            Matches<QueryMatch> matches = monitor.match(batch, SimpleMatcher.FACTORY);
             System.out.println(matches.getSlowLog());
             assertThat(matches.getSlowLog().toString())
-                .contains("1 [")
-                .contains("3 [")
-                .doesNotContain("2 [");
+                    .contains("1 [")
+                    .contains("3 [")
+                    .doesNotContain("2 [");
 
             monitor.setSlowLogLimit(1);
-            assertThat(monitor.match(doc1, SimpleMatcher.FACTORY).getSlowLog().toString())
-                .contains("1 [")
-                .contains("2 [")
-                .contains("3 [");
+            assertThat(monitor.match(batch, SimpleMatcher.FACTORY).getSlowLog().toString())
+                    .contains("1 [")
+                    .contains("2 [")
+                    .contains("3 [");
 
             monitor.setSlowLogLimit(2000000000000l);
-            assertThat(monitor.match(doc1, SimpleMatcher.FACTORY).getSlowLog())
-                .isEmpty();
+            assertThat(monitor.match(batch, SimpleMatcher.FACTORY).getSlowLog())
+                    .isEmpty();
         }
     }
 }

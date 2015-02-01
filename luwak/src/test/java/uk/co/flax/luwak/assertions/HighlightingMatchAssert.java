@@ -30,12 +30,12 @@ public class HighlightingMatchAssert extends AbstractAssert<HighlightingMatchAss
         super(actual, HighlightingMatchAssert.class);
     }
 
-    public HighlightingMatchHitsAssert matchesQuery(String queryId) {
-        for (HighlightsMatch match : actual) {
+    public HighlightingMatchHitsAssert matchesQuery(String queryId, String docId) {
+        for (HighlightsMatch match : actual.getMatches(docId)) {
             if (match.getQueryId().equals(queryId))
-                return new HighlightingMatchHitsAssert(match);
+                return new HighlightingMatchHitsAssert(match, this);
         }
-        fail("Document " + actual.docId() + " did not match query " + queryId);
+        fail("Document " + docId + " did not match query " + queryId);
         return null;
     }
 
@@ -44,7 +44,7 @@ public class HighlightingMatchAssert extends AbstractAssert<HighlightingMatchAss
     }
 
     public HighlightingMatchAssert matches(String docid) {
-        Assertions.assertThat(actual.docId()).isEqualTo(docid);
+        Assertions.assertThat(actual.getMatches(docid)).isNotNull();
         return this;
     }
 
@@ -66,8 +66,8 @@ public class HighlightingMatchAssert extends AbstractAssert<HighlightingMatchAss
         return this;
     }
 
-    public HighlightingMatchAssert doesNotMatchQuery(String queryId) {
-        for (HighlightsMatch match : actual) {
+    public HighlightingMatchAssert doesNotMatchQuery(String queryId, String docId) {
+        for (HighlightsMatch match : actual.getMatches(docId)) {
             Assertions.assertThat(match.getQueryId()).isNotEqualTo(queryId);
         }
         return this;

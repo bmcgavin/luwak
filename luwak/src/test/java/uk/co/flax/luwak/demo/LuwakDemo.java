@@ -55,12 +55,11 @@ public class LuwakDemo {
         try (Monitor monitor = new Monitor(new LuceneQueryParser(FIELD, ANALYZER), new TermFilteredPresearcher())) {
             addQueries(monitor, queriesFile);
 
-            for (InputDocument doc : buildDocs(inputDirectory)) {
-                Matches<QueryMatch> matches = monitor.match(doc, SimpleMatcher.FACTORY);
-                outputMatches(matches);
-            }
+            DocumentBatch batch = new DocumentBatch(ANALYZER);
+            batch.addAll(buildDocs(inputDirectory));
+            Matches<QueryMatch> matches = monitor.match(batch, SimpleMatcher.FACTORY);
+            outputMatches(matches);
         }
-
     }
 
     static void addQueries(Monitor monitor, String queriesFile) throws Exception {
@@ -90,7 +89,7 @@ public class LuwakDemo {
                  InputStreamReader reader = new InputStreamReader(fis, Charsets.UTF_8)) {
                 content = CharStreams.toString(reader);
                 InputDocument doc = InputDocument.builder(filePath.toString())
-                        .addField(FIELD, content, ANALYZER)
+                        .addField(FIELD, content)
                         .build();
                 docs.add(doc);
             }
@@ -99,10 +98,16 @@ public class LuwakDemo {
     }
 
     static void outputMatches(Matches<QueryMatch> matches) {
-        logger.info("Matches from {} [{} queries run]", matches.docId(), matches.getQueriesRun());
-        for (QueryMatch query : matches) {
-            logger.info("\tQuery: {}", query.getQueryId());
+
+        logger.info("Matched batch of {} documents in {} seconds with {} queries run",
+                matches.getBatchSize(), matches.getSearchTime(), matches.getQueriesRun());
+        for (DocumentMatches<QueryMatch> docMatches : matches) {
+            logger.info("Matches from {}", docMatches.getDocId());
+            for (QueryMatch match : docMatches) {
+                logger.info("\tQuery: {}", match.getQueryId());
+            }
         }
+
     }
 
 }

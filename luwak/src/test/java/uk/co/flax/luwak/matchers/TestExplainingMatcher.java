@@ -21,10 +21,7 @@ import java.io.IOException;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
 import org.junit.Test;
-import uk.co.flax.luwak.InputDocument;
-import uk.co.flax.luwak.Matches;
-import uk.co.flax.luwak.Monitor;
-import uk.co.flax.luwak.MonitorQuery;
+import uk.co.flax.luwak.*;
 import uk.co.flax.luwak.presearcher.MatchAllPresearcher;
 import uk.co.flax.luwak.queryparsers.LuceneQueryParser;
 
@@ -40,11 +37,13 @@ public class TestExplainingMatcher {
         try (Monitor monitor = new Monitor(new LuceneQueryParser("field"), new MatchAllPresearcher())) {
             monitor.update(new MonitorQuery("1", "test"), new MonitorQuery("2", "wibble"));
 
-            InputDocument doc1 = InputDocument.builder("doc1").addField("field", "test", ANALYZER).build();
+            DocumentBatch batch = new DocumentBatch(ANALYZER);
+            InputDocument doc1 = InputDocument.builder("doc1").addField("field", "test").build();
+            batch.addInputDocument(doc1);
 
-            Matches<ExplainingMatch> matches = monitor.match(doc1, ExplainingMatcher.FACTORY);
-            assertThat(matches.matches("1")).isNotNull();
-            assertThat(matches.matches("1").getExplanation()).isNotNull();
+            Matches<ExplainingMatch> matches = monitor.match(batch, ExplainingMatcher.FACTORY);
+            assertThat(matches.matches("1", "doc1")).isNotNull();
+            assertThat(matches.matches("1", "doc1").getExplanation()).isNotNull();
         }
     }
 }

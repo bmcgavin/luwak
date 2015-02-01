@@ -16,16 +16,25 @@ package uk.co.flax.luwak;
  * limitations under the License.
  */
 
+import java.util.Objects;
+
 public class QueryMatch {
 
     private final String queryId;
 
-    public QueryMatch(String queryId) {
-        this.queryId = queryId;
+    private final String docId;
+
+    public QueryMatch(String queryId, String docId) {
+        this.queryId = Objects.requireNonNull(queryId);
+        this.docId = Objects.requireNonNull(docId);
     }
 
     public String getQueryId() {
         return queryId;
+    }
+
+    public String getDocId() {
+        return docId;
     }
 
     @Override
@@ -35,13 +44,15 @@ public class QueryMatch {
 
         QueryMatch that = (QueryMatch) o;
 
-        if (queryId != null ? !queryId.equals(that.queryId) : that.queryId != null) return false;
+        if (!queryId.equals(that.queryId)) return false;
+        return docId.equals(that.docId);
 
-        return true;
     }
 
     @Override
     public int hashCode() {
-        return queryId != null ? queryId.hashCode() : 0;
+        int result = queryId.hashCode();
+        result = 31 * result + docId.hashCode();
+        return result;
     }
 }

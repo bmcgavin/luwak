@@ -1,9 +1,7 @@
 package uk.co.flax.luwak;
 
-import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.TokenStream;
-import org.apache.lucene.index.memory.MemoryIndex;
-import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.document.*;
+import org.apache.lucene.index.IndexOptions;
 import org.apache.lucene.search.similarities.DefaultSimilarity;
 import org.apache.lucene.search.similarities.Similarity;
 
@@ -29,6 +27,14 @@ import org.apache.lucene.search.similarities.Similarity;
  */
 public class InputDocument {
 
+    private static final FieldType FIELD_TYPE = new FieldType();
+    static {
+        FIELD_TYPE.setStored(true);
+        FIELD_TYPE.setIndexOptions(IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS);
+    }
+
+    public static final String ID_FIELD = "_id";
+
     /**
      * Create a new fluent {@link uk.co.flax.luwak.InputDocument.Builder} object.
      * @param id the id
@@ -40,19 +46,12 @@ public class InputDocument {
 
     private final String id;
 
-    private final MemoryIndex index = new MemoryIndex(true);
-    private IndexSearcher searcher;
-
     // protected constructor - use a Builder to create objects
     protected InputDocument(String id) {
         this.id = id;
     }
 
-    private void finish(Similarity similarity) {
-        index.setSimilarity(similarity);
-        index.freeze();
-        searcher = index.createSearcher();
-    }
+    private Document luceneDocument = new Document();
 
     /**
      * Get the document's ID
@@ -62,8 +61,8 @@ public class InputDocument {
         return id;
     }
 
-    public IndexSearcher getSearcher() {
-        return searcher;
+    public Document getDocument() {
+        return luceneDocument;
     }
 
     /**
@@ -87,25 +86,16 @@ public class InputDocument {
          *
          * @param field the field name
          * @param text the text content of the field
-         * @param analyzer the {@link Analyzer} to use for this field
          *
          * @return the Builder object
          */
-        public Builder addField(String field, String text, Analyzer analyzer) {
-            doc.index.addField(field, text, analyzer);
+        public Builder addField(String field, String text) {
+            doc.luceneDocument.add(new TextField(field, text, Field.Store.YES));
             return this;
         }
 
-        /**
-         * Add a field to the InputDocument
-         *
-         * @param field the field name
-         * @param tokenStream a tokenstream containing the field contents
-         *                    
-         * @return the Builder object
-         */
-        public Builder addField(String field, TokenStream tokenStream) {
-            doc.index.addField(field, tokenStream);
+        public Builder addField(Field field) {
+            doc.luceneDocument.add(field);
             return this;
         }
 
@@ -124,7 +114,7 @@ public class InputDocument {
          * @return the InputDocument
          */
         public InputDocument build() {
-            doc.finish(this.similarity);
+            doc.luceneDocument.add(new StringField(ID_FIELD, doc.id, Field.Store.YES));
             return doc;
         }
 

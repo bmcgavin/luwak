@@ -11,8 +11,8 @@ import org.apache.lucene.analysis.Tokenizer;
 import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
 import org.apache.lucene.analysis.core.WhitespaceTokenizer;
 import org.apache.lucene.index.LeafReader;
-import org.apache.lucene.index.SlowCompositeReaderWrapper;
 import org.junit.Test;
+import uk.co.flax.luwak.DocumentBatch;
 import uk.co.flax.luwak.InputDocument;
 
 import static uk.co.flax.luwak.assertions.TokenStreamAssert.assertThat;
@@ -132,14 +132,16 @@ public class TestSuffixingNGramTokenizer {
 
         String text = Files.toString(new File("src/test/resources/gutenberg/README"), Charsets.UTF_8);
         InputDocument doc = InputDocument.builder("1")
-                .addField("f", text, new WhitespaceAnalyzer()).build();
+                .addField("f", text).build();
+        DocumentBatch batch = new DocumentBatch(new WhitespaceAnalyzer());
+        batch.addInputDocument(doc);
 
         for (int i = 0; i < 50; i++) {
 
             long time = System.currentTimeMillis();
 
             // Cannot use try-with-resources here as we assign to ts in the block.
-            LeafReader reader = SlowCompositeReaderWrapper.wrap(doc.getSearcher().getIndexReader());
+            LeafReader reader = batch.getIndexReader();
             TokenStream ts = new TermsEnumTokenStream(reader.fields().terms("f").iterator());
             try {
                 ts = new SuffixingNGramTokenFilter(ts, "XX", "__WILDCARD__", 20);
