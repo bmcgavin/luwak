@@ -1,9 +1,8 @@
 package uk.co.flax.luwak.assertions;
 
-import java.util.Collection;
-
 import org.assertj.core.api.AbstractAssert;
 import org.assertj.core.api.Assertions;
+import uk.co.flax.luwak.DocumentMatches;
 import uk.co.flax.luwak.Matches;
 import uk.co.flax.luwak.matchers.HighlightsMatch;
 
@@ -64,7 +63,7 @@ public class HighlightingMatchAssert extends AbstractAssert<HighlightingMatchAss
     }
 
     public HighlightingMatchAssert doesNotMatchQuery(String queryId, String docId) {
-        Collection<HighlightsMatch> matches = actual.getMatches(docId);
+        DocumentMatches<HighlightsMatch> matches = actual.getMatches(docId);
         if (matches != null) {
             for (HighlightsMatch match : actual.getMatches(docId)) {
                 Assertions.assertThat(match.getQueryId()).isNotEqualTo(queryId);
