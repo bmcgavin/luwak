@@ -1,9 +1,8 @@
 package uk.co.flax.luwak.intervals;
 
-import java.util.Collection;
-
 import org.assertj.core.api.AbstractAssert;
 import org.assertj.core.api.Assertions;
+import uk.co.flax.luwak.DocumentMatches;
 import uk.co.flax.luwak.Matches;
 
 import static org.assertj.core.api.Fail.fail;
@@ -63,9 +62,9 @@ public class IntervalMatchesAssert extends AbstractAssert<IntervalMatchesAssert,
     }
 
     public IntervalMatchesAssert doesNotMatchQuery(String queryId, String docId) {
-        Collection<IntervalsQueryMatch> matches = actual.getMatches(docId);
+        DocumentMatches<IntervalsQueryMatch> matches = actual.getMatches(docId);
         if (matches != null) {
-            for (IntervalsQueryMatch match : actual.getMatches(docId)) {
+            for (IntervalsQueryMatch match : matches) {
                 Assertions.assertThat(match.getQueryId()).isNotEqualTo(queryId);
             }
         }

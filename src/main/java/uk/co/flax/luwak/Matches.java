@@ -66,11 +66,8 @@ public class Matches<T extends QueryMatch> implements Iterable<DocumentMatches<T
     /**
      * @return all matches for a particular document
      */
-    public Collection<T> getMatches(String docId) {
-        DocumentMatches docMatches = matches.get(docId);
-        if (docMatches == null)
-            return null;
-        return docMatches.getMatches();
+    public DocumentMatches<T> getMatches(String docId) {
+        return matches.get(docId);
     }
 
     /**
