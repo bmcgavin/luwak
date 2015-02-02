@@ -1,9 +1,13 @@
 package uk.co.flax.luwak;
 
-import org.apache.lucene.document.*;
+import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Field;
+import org.apache.lucene.document.FieldType;
+import org.apache.lucene.document.StringField;
 import org.apache.lucene.index.IndexOptions;
 import org.apache.lucene.search.similarities.DefaultSimilarity;
 import org.apache.lucene.search.similarities.Similarity;
+import org.apache.lucene.index.IndexableField;
 
 /**
  * Copyright (c) 2013 Lemur Consulting Ltd.
@@ -33,7 +37,7 @@ public class InputDocument {
         FIELD_TYPE.setIndexOptions(IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS);
     }
 
-    public static final String ID_FIELD = "_id";
+    public static final String ID_FIELD = "_luwak_id";
 
     /**
      * Create a new fluent {@link uk.co.flax.luwak.InputDocument.Builder} object.
@@ -90,11 +94,13 @@ public class InputDocument {
          * @return the Builder object
          */
         public Builder addField(String field, String text) {
+            checkFieldName(field);
             doc.luceneDocument.add(new Field(field, text, FIELD_TYPE));
             return this;
         }
 
-        public Builder addField(Field field) {
+        public Builder addField(IndexableField field) {
+            checkFieldName(field.name());
             doc.luceneDocument.add(field);
             return this;
         }
@@ -118,6 +124,11 @@ public class InputDocument {
             return doc;
         }
 
+    }
+
+    public static void checkFieldName(String fieldName) {
+        if (ID_FIELD.equals(fieldName))
+            throw new IllegalArgumentException(ID_FIELD + " is a reserved field name");
     }
 
 }
