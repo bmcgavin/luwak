@@ -212,6 +212,16 @@ public class TestMonitor {
     @Test
     public void testDocumentBatching() throws IOException {
 
+        DocumentBatch batch = new DocumentBatch(WHITESPACE);
+        batch.addInputDocument(InputDocument.builder("doc1").addField(TEXTFIELD, "this is a test").build());
+        batch.addInputDocument(InputDocument.builder("doc2").addField(TEXTFIELD, "this is a kangaroo").build());
+
+        monitor.clear();
+        monitor.update(new MonitorQuery("1", "kangaroo"));
+
+        Matches<QueryMatch> response = monitor.match(batch, SimpleMatcher.FACTORY);
+        Assertions.assertThat(response.getBatchSize()).isEqualTo(2);
+
 
 
     }
