@@ -484,15 +484,11 @@ public class Monitor implements Closeable {
         return matcher.getMatches();
     }
 
-    private void match(LeafReader reader, MonitorQueryCollector collector) throws IOException {
-        match(buildQuery(reader), collector);
-    }
-
     private <T extends QueryMatch> void match(CandidateMatcher<T> matcher) throws IOException {
 
         long buildTime = System.nanoTime();
         Query query = buildQuery(matcher.getIndexReader());
-        buildTime = (System.nanoTime() - buildTime) / 1000000;
+        buildTime = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - buildTime);
 
         MatchingCollector<T> collector = new MatchingCollector<>(matcher);
         match(query, collector);
@@ -563,7 +559,7 @@ public class Monitor implements Closeable {
     public <T extends QueryMatch> PresearcherMatches<T>
             debug(DocumentBatch docs, MatcherFactory<T> factory) throws IOException {
         PresearcherMatchCollector<T> collector = new PresearcherMatchCollector<>(factory.createMatcher(docs));
-        match(docs.getIndexReader(), collector);
+        match(buildQuery(docs.getIndexReader()), collector);
         return collector.getMatches();
     }
 
