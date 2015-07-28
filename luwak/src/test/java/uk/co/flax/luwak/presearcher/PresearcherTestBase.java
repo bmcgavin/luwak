@@ -9,8 +9,7 @@ import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.core.KeywordAnalyzer;
 import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
 import org.apache.lucene.analysis.tokenattributes.TermToBytesRefAttribute;
-import org.apache.lucene.document.Field;
-import org.apache.lucene.document.IntField;
+import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.MatchAllDocsQuery;
@@ -199,7 +198,11 @@ public abstract class PresearcherTestBase {
         Monitor monitor = new Monitor(new NonStringTermQueryParser(), presearcher);
         monitor.update(new MonitorQuery("1", "testquery"));
 
-        assertThat(monitor.match(buildDoc("1", "f", "wibble"), SimpleMatcher.FACTORY))
+        DocumentBatch batch = new DocumentBatch(new KeywordAnalyzer());
+        InputDocument doc = InputDocument.builder("1").addField(new TextField("f", new NonStringTokenStream())).build();
+        batch.addInputDocument(doc);
+
+        assertThat(monitor.match(batch, SimpleMatcher.FACTORY))
                 .hasMatchCount("1", 1)
                 .hasQueriesRunCount(1);
 
@@ -228,12 +231,13 @@ public abstract class PresearcherTestBase {
             for (int i = 8; i <= 15; i++) {
                 NumericTokenStream nts = new NumericTokenStream(1);
                 nts.setIntValue(i);
-                InputDocument doc = InputDocument.builder("doc" + i).addField(new IntField(TEXTFIELD, i, Field.Store.YES)).build();
+                InputDocument doc = InputDocument.builder("doc" + i)
+                        .addField(new TextField(TEXTFIELD, nts)).build();
                 DocumentBatch batch = new DocumentBatch(new KeywordAnalyzer());
                 batch.addInputDocument(doc);
                 assertThat(numeric_monitor.match(batch, SimpleMatcher.FACTORY))
                         .matchesDoc("doc" + i)
-                        .hasMatchCount("doc1", 1)
+                        .hasMatchCount("doc" + i, 1)
                         .matchesQuery("query" + i, "doc" + i);
             }
 

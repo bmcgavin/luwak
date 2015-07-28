@@ -57,7 +57,7 @@ public class TestTermPresearcher extends PresearcherTestBase {
                 .hasMatchCount("doc1", 1)
                 .selectedQueries("2", "3")
                 .matchesQuery("2", "doc1")
-                .hasQueriesRunCount(1);
+                .hasQueriesRunCount(2);
 
     }
 
