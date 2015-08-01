@@ -33,7 +33,7 @@ public class TimingsMatcher extends CandidateMatcher<QueryMatch> {
     }
 
     @Override
-    public void matchQuery(String queryId, Query matchQuery, Query highlightQuery) throws IOException {
+    public void doMatchQuery(String queryId, Query matchQuery, Query highlightQuery) throws IOException {
         // no-op
     }
 
