@@ -90,4 +90,10 @@ public class DocumentBatch implements Closeable {
             throw new IllegalStateException("Cannot call getBatchSize() before getIndexReader()");
         return docIds.length;
     }
+
+    public String[] getDocIds() {
+        if (docIds == null)
+            throw new IllegalStateException("Cannot call getDocIds() before getIndexReader()");
+        return docIds;
+    }
 }

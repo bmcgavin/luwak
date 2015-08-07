@@ -16,13 +16,11 @@ package uk.co.flax.luwak.benchmark;
  */
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.lucene.search.Query;
-import org.apache.lucene.search.spans.SpanQuery;
 import uk.co.flax.luwak.CandidateMatcher;
-import uk.co.flax.luwak.InputDocument;
+import uk.co.flax.luwak.DocumentBatch;
 import uk.co.flax.luwak.MatcherFactory;
 
 /**
@@ -32,13 +30,15 @@ import uk.co.flax.luwak.MatcherFactory;
  */
 public class PresearcherMatcher extends CandidateMatcher<PresearcherMatch> {
 
-    public PresearcherMatcher(InputDocument doc) {
-        super(doc);
+    public PresearcherMatcher(DocumentBatch batch) {
+        super(batch);
     }
 
     @Override
-    protected PresearcherMatch doMatchQuery(String queryId, Query matchQuery, Map<String, String> metadata) throws IOException {
-        return new PresearcherMatch(queryId);
+    protected void doMatchQuery(String queryId, Query matchQuery, Map<String, String> metadata) throws IOException {
+        for (String doc : docs.getDocIds()) {
+            this.addMatch(new PresearcherMatch(queryId, doc));
+        }
     }
 
     @Override
@@ -48,8 +48,8 @@ public class PresearcherMatcher extends CandidateMatcher<PresearcherMatch> {
 
     public static final MatcherFactory<PresearcherMatch> FACTORY = new MatcherFactory<PresearcherMatch>() {
         @Override
-        public CandidateMatcher<PresearcherMatch> createMatcher(InputDocument doc) {
-            return new PresearcherMatcher(doc);
+        public CandidateMatcher<PresearcherMatch> createMatcher(DocumentBatch docs) {
+            return new PresearcherMatcher(docs);
         }
     };
 }

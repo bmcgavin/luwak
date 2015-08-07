@@ -17,24 +17,55 @@ package uk.co.flax.luwak.benchmark;
  */
 
 import java.io.IOException;
+import java.util.Iterator;
+import java.util.List;
 
+import com.google.common.collect.Iterables;
+import org.apache.lucene.analysis.core.KeywordAnalyzer;
 import uk.co.flax.luwak.*;
 
 public class Benchmark {
 
     public static <T extends QueryMatch> BenchmarkResults<T> run(Monitor monitor, Iterable<InputDocument> documents,
-                                                                 MatcherFactory<T> matcherFactory) throws IOException {
+                                                                 int batchsize, MatcherFactory<T> matcherFactory) throws IOException {
         BenchmarkResults<T> results = new BenchmarkResults<>();
-        for (InputDocument doc : documents) {
-            Matches<T> matches = monitor.match(doc, matcherFactory);
+        for (DocumentBatch batch : batchDocuments(documents, batchsize)) {
+            Matches<T> matches = monitor.match(batch, matcherFactory);
             results.add(matches);
         }
         return results;
     }
 
-    public static BenchmarkResults<PresearcherMatch> timePresearcher(Monitor monitor, Iterable<InputDocument> documents)
+    public static Iterable<DocumentBatch> batchDocuments(Iterable<InputDocument> documents, int batchsize) {
+        Iterable<List<InputDocument>> partitions = Iterables.partition(documents, batchsize);
+        final Iterator<List<InputDocument>> it = partitions.iterator();
+        return new Iterable<DocumentBatch>() {
+            @Override
+            public Iterator<DocumentBatch> iterator() {
+                return new Iterator<DocumentBatch>() {
+                    @Override
+                    public boolean hasNext() {
+                        return it.hasNext();
+                    }
+
+                    @Override
+                    public DocumentBatch next() {
+                        try {
+                            DocumentBatch batch = new DocumentBatch(new KeywordAnalyzer());
+                            batch.addAll(it.next());
+                            return batch;
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                };
+            }
+        };
+    }
+
+    public static BenchmarkResults<PresearcherMatch> timePresearcher(Monitor monitor, int batchsize, Iterable<InputDocument> documents)
             throws IOException {
-        return run(monitor, documents, PresearcherMatcher.FACTORY);
+        return run(monitor, documents, batchsize, PresearcherMatcher.FACTORY);
     }
 
     public static <T extends QueryMatch> ValidatorResults<T> validate(Monitor monitor, Iterable<ValidatorDocument<T>> documents,
