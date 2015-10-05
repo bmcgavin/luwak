@@ -22,6 +22,8 @@ import java.io.IOException;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.index.*;
 import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.similarities.DefaultSimilarity;
+import org.apache.lucene.search.similarities.Similarity;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.RAMDirectory;
 import org.apache.lucene.util.IOUtils;
@@ -34,13 +36,17 @@ public class DocumentBatch implements Closeable {
     private String[] docIds = null;
     private LeafReader reader = null;
 
-    public DocumentBatch(Directory directory, Analyzer analyzer) throws IOException {
+    public DocumentBatch(Directory directory, Analyzer analyzer, Similarity similarity) throws IOException {
         this.directory = directory;
-        this.writer = new IndexWriter(directory, new IndexWriterConfig(analyzer));
+        this.writer = new IndexWriter(directory, new IndexWriterConfig(analyzer).setSimilarity(similarity));
+    }
+
+    public DocumentBatch(Analyzer analyzer, Similarity similarity) throws IOException {
+        this(new RAMDirectory(), analyzer, similarity);
     }
 
     public DocumentBatch(Analyzer analyzer) throws IOException {
-        this (new RAMDirectory(), analyzer);
+        this(analyzer, new DefaultSimilarity());
     }
 
     public void addInputDocument(InputDocument doc) throws IOException {
@@ -67,7 +73,9 @@ public class DocumentBatch implements Closeable {
     }
 
     public IndexSearcher getSearcher() throws IOException {
-        return new IndexSearcher(getIndexReader());
+        IndexSearcher searcher = new IndexSearcher(getIndexReader());
+        searcher.setSimilarity(this.writer.getConfig().getSimilarity());
+        return searcher;
     }
 
     @Override

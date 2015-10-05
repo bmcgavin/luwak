@@ -5,8 +5,6 @@ import org.apache.lucene.document.Field;
 import org.apache.lucene.document.FieldType;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.index.IndexOptions;
-import org.apache.lucene.search.similarities.DefaultSimilarity;
-import org.apache.lucene.search.similarities.Similarity;
 import org.apache.lucene.index.IndexableField;
 
 /**
@@ -75,7 +73,6 @@ public class InputDocument {
     public static class Builder {
 
         private final InputDocument doc;
-        private Similarity similarity = new DefaultSimilarity();
 
         /**
          * Create a new Builder for an InputDocument with the given id
@@ -102,16 +99,6 @@ public class InputDocument {
         public Builder addField(IndexableField field) {
             checkFieldName(field.name());
             doc.luceneDocument.add(field);
-            return this;
-        }
-
-        /**
-         * Set the {@code Similarity} to be used when scoring this InputDocument
-         * @param similarity the Similarity
-         * @return the Builder object
-         */
-        public Builder setSimilarity(Similarity similarity) {
-            this.similarity = similarity;
             return this;
         }
 

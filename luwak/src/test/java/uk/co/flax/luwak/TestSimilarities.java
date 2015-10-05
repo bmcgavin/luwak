@@ -55,12 +55,13 @@ public class TestSimilarities {
             DocumentBatch batch = new DocumentBatch(new WhitespaceAnalyzer());
             batch.addInputDocument(doc);
 
-            InputDocument docWithSim = InputDocument.builder("docWithSim")
-                    .addField("field", "this is a test")
-                    .setSimilarity(similarity).build();
+            InputDocument docWithSim = InputDocument.builder("doc")
+                    .addField("field", "this is a test").build();
+            DocumentBatch batchWithSim = new DocumentBatch(new WhitespaceAnalyzer(), similarity);
+            batchWithSim.addInputDocument(docWithSim);
 
             Matches<ScoringMatch> standard = monitor.match(batch, ScoringMatcher.FACTORY);
-            Matches<ScoringMatch> withSim = monitor.match(batch, ScoringMatcher.FACTORY);
+            Matches<ScoringMatch> withSim = monitor.match(batchWithSim, ScoringMatcher.FACTORY);
 
             assertThat(Iterables.getFirst(standard.getMatches("doc"), null).getScore())
                     .isEqualTo(Iterables.getFirst(withSim.getMatches("doc"), null).getScore() / 1000);
