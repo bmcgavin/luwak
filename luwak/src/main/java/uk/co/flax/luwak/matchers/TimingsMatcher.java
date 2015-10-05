@@ -16,6 +16,7 @@ package uk.co.flax.luwak.matchers;
  */
 
 import java.io.IOException;
+import java.util.Map;
 
 import org.apache.lucene.search.Query;
 import uk.co.flax.luwak.CandidateMatcher;
@@ -33,7 +34,7 @@ public class TimingsMatcher extends CandidateMatcher<QueryMatch> {
     }
 
     @Override
-    public void doMatchQuery(String queryId, Query matchQuery, Query highlightQuery) throws IOException {
+    public void doMatchQuery(String queryId, Query matchQuery, Map<String, String> metadata) throws IOException {
         // no-op
     }
 
