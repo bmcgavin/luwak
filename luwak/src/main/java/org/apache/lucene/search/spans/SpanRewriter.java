@@ -15,17 +15,19 @@ package org.apache.lucene.search.spans;
  *   limitations under the License.
  */
 
-import org.apache.lucene.search.*;
-
 import java.util.ArrayList;
+
+import org.apache.lucene.search.*;
 
 public class SpanRewriter {
 
     public static final SpanRewriter INSTANCE = new SpanRewriter();
 
     public Query rewrite(Query in) {
-        if (in instanceof SpanQuery)
+        if (in instanceof SpanOffsetReportingQuery)
             return in;
+        if (in instanceof SpanQuery)
+            return forceOffsets((SpanQuery)in);
         if (in instanceof TermQuery)
             return rewriteTermQuery((TermQuery)in);
         if (in instanceof BooleanQuery)
@@ -38,8 +40,12 @@ public class SpanRewriter {
         return rewriteUnknown(in);
     }
 
+    protected final SpanQuery forceOffsets(SpanQuery in) {
+        return new SpanOffsetReportingQuery(in);
+    }
+
     protected Query rewriteTermQuery(TermQuery tq) {
-        return new SpanTermQuery(tq.getTerm());
+        return forceOffsets(new SpanTermQuery(tq.getTerm()));
     }
 
     protected Query rewriteBoolean(BooleanQuery bq) {
@@ -51,7 +57,7 @@ public class SpanRewriter {
     }
 
     protected Query rewriteMultiTermQuery(MultiTermQuery mtq) {
-        return new SpanMultiTermQueryWrapper<>(mtq);
+        return forceOffsets(new SpanMultiTermQueryWrapper<>(mtq));
     }
 
     protected Query rewriteDisjunctionMaxQuery(DisjunctionMaxQuery disjunctionMaxQuery) {
