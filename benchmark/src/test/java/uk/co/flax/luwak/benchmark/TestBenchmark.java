@@ -60,11 +60,11 @@ public class TestBenchmark {
     public void testBasicBenchmarking() throws IOException {
 
         List<InputDocument> docs = ImmutableList.of(
-                InputDocument.builder("doc1").addField("f", "some text about the world", STANDARD).build(),
-                InputDocument.builder("doc2").addField("f", "some text about cheese", STANDARD).build()
+                InputDocument.builder("doc1").addField("f", "some text about the world").build(),
+                InputDocument.builder("doc2").addField("f", "some text about cheese").build()
         );
 
-        BenchmarkResults<QueryMatch> results = Benchmark.run(monitor, docs, SimpleMatcher.FACTORY);
+        BenchmarkResults<QueryMatch> results = Benchmark.run(monitor, docs, 1, SimpleMatcher.FACTORY);
 
         assertThat(results.getTimer().getCount()).isEqualTo(2);
 
@@ -74,13 +74,13 @@ public class TestBenchmark {
     public void testPresearcherBenchmarking() throws IOException {
 
         List<InputDocument> docs = ImmutableList.of(
-                InputDocument.builder("doc1").addField("f", "some text about the world", STANDARD).build(),
-                InputDocument.builder("doc2").addField("f", "some text about cheese", STANDARD).build()
+                InputDocument.builder("doc1").addField("f", "some text about the world").build(),
+                InputDocument.builder("doc2").addField("f", "some text about cheese").build()
         );
 
-        BenchmarkResults<PresearcherMatch> results = Benchmark.timePresearcher(monitor, docs);
+        BenchmarkResults<PresearcherMatch> results = Benchmark.timePresearcher(monitor, 2, docs);
 
-        assertThat(results.getTimer().getCount()).isEqualTo(2);
+        assertThat(results.getTimer().getCount()).isEqualTo(1);
         assertThat(results.getTimer().getMeanRate()).isGreaterThan(0);
 
     }
@@ -89,9 +89,9 @@ public class TestBenchmark {
     public void testValidation() throws IOException {
 
         List<ValidatorDocument<QueryMatch>> docs = ImmutableList.of(
-                vd("doc1", "some text about the world", new QueryMatch("3"), new QueryMatch("4")),  // 3: extra
-                vd("doc2", "some text about cheese", new QueryMatch("1"), new QueryMatch("4")),     // accurate
-                vd("doc3", "some text about cheese", new QueryMatch("1"))                           // 4: missing
+                vd("doc1", "some text about the world", new QueryMatch("3", "doc1"), new QueryMatch("4", "doc1")),  // 3: extra
+                vd("doc2", "some text about cheese", new QueryMatch("1", "doc2"), new QueryMatch("4", "doc2")),     // accurate
+                vd("doc3", "some text about cheese", new QueryMatch("1", "doc3"))                           // 4: missing
         );
 
         ValidatorResults<QueryMatch> results = Benchmark.validate(monitor, docs, SimpleMatcher.FACTORY);
@@ -99,17 +99,17 @@ public class TestBenchmark {
         assertThat(results.getTimer().getCount()).isEqualTo(3);
         assertThat(results.getCorrectMatchCount()).isEqualTo(1);
         assertThat(results.getBadDocuments()).containsOnly("doc1", "doc3");
-        assertThat(results.getExtraMatches("doc1")).containsExactly(new QueryMatch("3"));
+        assertThat(results.getExtraMatches("doc1")).containsExactly(new QueryMatch("3", "doc1"));
         assertThat(results.getMissingMatches("doc1")).isEmpty();
         assertThat(results.getMissingMatches("doc2")).isEmpty();
         assertThat(results.getExtraMatches("doc3")).isEmpty();
-        assertThat(results.getMissingMatches("doc3")).containsExactly(new QueryMatch("4"));
+        assertThat(results.getMissingMatches("doc3")).containsExactly(new QueryMatch("4", "doc3"));
 
     }
 
     private static ValidatorDocument<QueryMatch> vd(String id, String text, QueryMatch... expected) {
         return new ValidatorDocument<>(
-                InputDocument.builder(id).addField("f", text, STANDARD).build(),
+                InputDocument.builder(id).addField("f", text).build(),
                 Sets.newHashSet(expected)
         );
     }

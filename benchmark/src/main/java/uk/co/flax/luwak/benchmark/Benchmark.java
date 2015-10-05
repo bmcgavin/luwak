@@ -22,6 +22,7 @@ import java.util.List;
 
 import com.google.common.collect.Iterables;
 import org.apache.lucene.analysis.core.KeywordAnalyzer;
+import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
 import uk.co.flax.luwak.*;
 
 public class Benchmark {
@@ -58,6 +59,11 @@ public class Benchmark {
                             throw new RuntimeException(e);
                         }
                     }
+
+                    @Override
+                    public void remove() {
+                        throw new UnsupportedOperationException();
+                    }
                 };
             }
         };
@@ -72,8 +78,10 @@ public class Benchmark {
                                                                       MatcherFactory<T> matcherFactory) throws IOException {
         ValidatorResults<T> results = new ValidatorResults<>();
         for (ValidatorDocument<T> doc : documents) {
-            Matches<T> matches = monitor.match(doc.getDocument(), matcherFactory);
-            results.add(matches, doc.getExpectedMatches());
+            DocumentBatch batch = new DocumentBatch(new WhitespaceAnalyzer());
+            batch.addInputDocument(doc.getDocument());
+            Matches<T> matches = monitor.match(batch, matcherFactory);
+            results.add(matches, doc.getDocument().getId(), doc.getExpectedMatches());
         }
         return results;
     }
