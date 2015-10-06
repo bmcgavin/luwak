@@ -17,7 +17,6 @@ import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.util.BytesRef;
-import uk.co.flax.luwak.InputDocument;
 
 /*
  * Copyright (c) 2014 Lemur Consulting Ltd.
@@ -81,7 +80,7 @@ public class FieldFilterPresearcherComponent extends PresearcherComponent {
         BytesRef term;
         TermsEnum te = terms.iterator();
         while ((term = te.next()) != null) {
-            bq.add(new TermQuery(new Term(field, term.clone())), BooleanClause.Occur.SHOULD);
+            bq.add(new TermQuery(new Term(field, BytesRef.deepCopyOf(term))), BooleanClause.Occur.SHOULD);
         }
 
         BooleanQuery built = bq.build();
