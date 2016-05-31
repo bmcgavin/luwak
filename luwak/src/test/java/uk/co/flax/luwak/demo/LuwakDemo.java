@@ -22,6 +22,8 @@ import uk.co.flax.luwak.matchers.HighlightingMatcher;
 import uk.co.flax.luwak.matchers.HighlightsMatch;
 import uk.co.flax.luwak.matchers.ExplainingMatcher;
 import uk.co.flax.luwak.matchers.ExplainingMatch;
+import uk.co.flax.luwak.matchers.ScoringMatcher;
+import uk.co.flax.luwak.matchers.ScoringMatch;
 import uk.co.flax.luwak.presearcher.TermFilteredPresearcher;
 import uk.co.flax.luwak.queryparsers.LuceneQueryParser;
 
@@ -50,7 +52,7 @@ public class LuwakDemo {
     public static final Logger logger = LoggerFactory.getLogger(LuwakDemo.class);
 
     public static void main(String... args) throws Exception {
-        new LuwakDemo("src/test/resources/demoqueries", "src/test/resources/gutenberg");
+        new LuwakDemo("src/test/resources/model_list", "src/test/resources/querydir");
     }
 
     public LuwakDemo(String queriesFile, String inputDirectory) throws Exception {
@@ -58,7 +60,7 @@ public class LuwakDemo {
         try (Monitor monitor = new Monitor(new LuceneQueryParser(FIELD, ANALYZER), new TermFilteredPresearcher())) {
             addQueries(monitor, queriesFile);
             DocumentBatch batch = DocumentBatch.of(buildDocs(inputDirectory));
-            Matches<ExplainingMatch> matches = monitor.match(batch, ExplainingMatcher.FACTORY);
+            Matches<ScoringMatch> matches = monitor.match(batch, ScoringMatcher.FACTORY);
             outputMatches(matches);
         }
     }
@@ -98,16 +100,20 @@ public class LuwakDemo {
         return docs;
     }
 
-    static void outputMatches(Matches<ExplainingMatch> matches) {
+    static void outputMatches(Matches<ScoringMatch> matches) {
 
         logger.info("Matched batch of {} documents in {} milliseconds with {} queries run",
                 matches.getBatchSize(), matches.getSearchTime(), matches.getQueriesRun());
-        for (DocumentMatches<ExplainingMatch> docMatches : matches) {
+        for (DocumentMatches<ScoringMatch> docMatches : matches) {
             logger.info("Matches from {}", docMatches.getDocId());
-            for (ExplainingMatch match : docMatches) {
+            for (ScoringMatch match : docMatches) {
+                //HighlightingMatch
                 //logger.info("\tQuery: {} ({} hits)", match.getQueryId(), match.getHitCount());
-                logger.info("\tExplanation {})", match.getExplanation());
-                logger.info("\tValue {})", match.getExplanation().getValue());
+                //Explaining Matcher
+                //logger.info("\tExplanation {})", match.getExplanation());
+                //logger.info("\tValue {})", match.getExplanation().getValue());
+                //ScoringMatch
+                logger.info("\tQuery: {} (score: {})", match.getQueryId(), match.getScore());
             }
         }
 
