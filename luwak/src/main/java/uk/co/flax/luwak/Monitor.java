@@ -332,11 +332,13 @@ public class Monitor implements Closeable {
                     }
                     for (Indexable update : updates) {
                         this.queries.put(update.queryCacheEntry.hash, update.queryCacheEntry);
+                        System.out.println("Adding cacheEntry.matchQuery : " + update.queryCacheEntry.matchQuery);
                         writer.addDocument(update.document);
                         if (purgeCache != null)
                             purgeCache.put(update.queryCacheEntry.hash, update.queryCacheEntry);
                     }
                 }
+                System.out.println("writer : " + writer);
                 writer.commit();
                 manager.maybeRefresh();
             } finally {
