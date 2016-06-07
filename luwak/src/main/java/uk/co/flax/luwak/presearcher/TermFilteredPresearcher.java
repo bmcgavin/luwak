@@ -83,8 +83,10 @@ public class TermFilteredPresearcher extends Presearcher {
     public final Query buildQuery(LeafReader reader, QueryTermFilter queryTermFilter) {
         try {
             DocumentQueryBuilder queryBuilder = getQueryBuilder();
+            System.out.println("DocumentQueryBuilder : " + queryBuilder);
             for (String field : reader.fields()) {
 
+                System.out.println("Adding field " + field);
                 TokenStream ts = new TermsEnumTokenStream(reader.terms(field).iterator());
                 for (PresearcherComponent component : components) {
                     ts = component.filterDocumentTokens(field, ts);
@@ -100,14 +102,17 @@ public class TermFilteredPresearcher extends Presearcher {
             }
             Query presearcherQuery = queryBuilder.build();
 
+            System.out.println("presearcherQuery (prebuild) : " + presearcherQuery);
             BooleanQuery.Builder bq = new BooleanQuery.Builder();
             bq.add(presearcherQuery, BooleanClause.Occur.SHOULD);
             bq.add(new TermQuery(new Term(ANYTOKEN_FIELD, ANYTOKEN)), BooleanClause.Occur.SHOULD);
             presearcherQuery = bq.build();
+            System.out.println("presearcherQuery (build) : " + presearcherQuery);
 
             for (PresearcherComponent component : components) {
                 presearcherQuery = component.adjustPresearcherQuery(reader, presearcherQuery);
             }
+            System.out.println("presearcherQuery (adjust) : " + presearcherQuery);
 
             return presearcherQuery;
         }

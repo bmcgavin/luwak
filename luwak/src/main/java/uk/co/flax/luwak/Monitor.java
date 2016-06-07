@@ -611,9 +611,21 @@ public class Monitor implements Closeable {
         long buildTime = System.nanoTime();
         MatchingCollector<T> collector = new MatchingCollector<>(matcher);
         IndexSearcher searcher = null;
+        IndexReader searchReader = null;
+        LeafReader matchReader = null;
+        QueryTermFilter termFilter = null;
         try {
             searcher = getSearcher(collector);
-            Query query = presearcher.buildQuery(matcher.getIndexReader(), termFilters.get(searcher.getIndexReader()));
+            searchReader = searcher.getIndexReader();
+            matchReader = matcher.getIndexReader();
+            termFilter = termFilters.get(searchReader);
+            Query query = presearcher.buildQuery(matchReader, termFilter);
+            System.out.println("Query : " + query);
+            System.out.println("termFilter : " + termFilter);
+            System.out.println("matchReader : " + matchReader);
+            System.out.println("searchReader : " + searchReader);
+            System.out.println("searcher : " + searcher);
+            System.out.println("presearcher : " + presearcher);
             buildTime = (System.nanoTime() - buildTime) / 1000000;
             searcher.search(query, collector);
         }
