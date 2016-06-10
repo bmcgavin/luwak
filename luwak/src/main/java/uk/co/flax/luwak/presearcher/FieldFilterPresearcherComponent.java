@@ -64,17 +64,17 @@ public class FieldFilterPresearcherComponent extends PresearcherComponent {
     public Query adjustPresearcherQuery(LeafReader reader, Query presearcherQuery) throws IOException {
 
         Query filterClause = buildFilterClause(reader);
-        System.out.println("FFPC.filterClause : " + filterClause);
+        //DEBUG System.out.println("FFPC.filterClause : " + filterClause);
         if (filterClause == null) {
-            System.out.println("FFPC return pQ");
+            //DEBUG System.out.println("FFPC return pQ");
             return presearcherQuery;
         }
 
         BooleanQuery.Builder bq = new BooleanQuery.Builder();
         bq.add(presearcherQuery, BooleanClause.Occur.MUST);
-        System.out.println("Fucking dumb presearcherQuery : " + presearcherQuery);
+        //DEBUG System.out.println("Fucking dumb presearcherQuery : " + presearcherQuery);
         bq.add(filterClause, BooleanClause.Occur.FILTER);
-        System.out.println("FFPC.adjustPresearcherQuery returning : " + bq.build());
+        //DEBUG System.out.println("FFPC.adjustPresearcherQuery returning : " + bq.build());
         return bq.build();
     }
 

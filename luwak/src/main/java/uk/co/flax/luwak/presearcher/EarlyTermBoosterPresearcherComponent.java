@@ -64,27 +64,27 @@ public class EarlyTermBoosterPresearcherComponent extends PresearcherComponent {
     public Query adjustPresearcherQuery(LeafReader reader, Query presearcherQuery) throws IOException {
 
         Query filterClause = buildFilterClause(reader);
-        System.out.println("ETBP.filterClause : " + filterClause);
+        //DEBUG System.out.println("ETBP.filterClause : " + filterClause);
 
         if (filterClause == null) {
-            System.out.println("ETBP return pQ");
+            //DEBUG System.out.println("ETBP return pQ");
             return presearcherQuery;
         }
 
         return filterClause;
         //BooleanQuery.Builder bq = new BooleanQuery.Builder();
         //bq.add(presearcherQuery, BooleanClause.Occur.MUST);
-        //System.out.println("Fucking dumb presearcherQuery : " + presearcherQuery);
+        //DEBUG System.out.println("Fucking dumb presearcherQuery : " + presearcherQuery);
         //bq.add(filterClause, BooleanClause.Occur.MUST_NOT);
-        //System.out.println("ETBP.adjustPresearcherQuery returning : " + bq.build());
+        //DEBUG System.out.println("ETBP.adjustPresearcherQuery returning : " + bq.build());
         //return bq.build();
     }
 
     private Query buildFilterClause(LeafReader reader) throws IOException {
 
-        System.out.println("Reader class : " + reader.getClass());
+        //DEBUG System.out.println("Reader class : " + reader.getClass());
         Terms terms = reader.fields().terms(field);
-        System.out.println("Terms hasPositions() : " + terms.hasPositions());
+        //DEBUG System.out.println("Terms hasPositions() : " + terms.hasPositions());
         if (terms == null)
             return null;
 
@@ -94,7 +94,7 @@ public class EarlyTermBoosterPresearcherComponent extends PresearcherComponent {
 
         BytesRef term;
         TermsEnum te = terms.iterator();
-        System.out.println("ETBP terms size : " + terms.size());
+        //DEBUG System.out.println("ETBP terms size : " + terms.size());
         long boostFactor = terms.size();
         long queryLength = 0;
         TermQuery tq = null;
@@ -106,14 +106,14 @@ public class EarlyTermBoosterPresearcherComponent extends PresearcherComponent {
         te = terms.iterator();
         
         while ((term = te.next()) != null) {
-            System.out.println("Term offset : " + term.offset);
-            System.out.println("Boost factor : " + (float)queryLength / (float)term.offset);
+            //DEBUG System.out.println("Term offset : " + term.offset);
+            //DEBUG System.out.println("Boost factor : " + (float)queryLength / (float)term.offset);
             // we need to check that every document in the batch has the same field values, otherwise
             // this filtering will not work
             if (te.docFreq() != docsInBatch)
                 throw new IllegalArgumentException("Some documents in this batch do not have a term value of "
                                                     + field + ":" + Term.toString(term));
-            System.out.println("ETBPC term : " +  BytesRef.deepCopyOf(term));
+            //DEBUG System.out.println("ETBPC term : " +  BytesRef.deepCopyOf(term));
             tq = new TermQuery(new Term(field, BytesRef.deepCopyOf(term)));
             tq.setBoost((float)queryLength / (float)term.offset);
             //tq.setBoost(0.0f);

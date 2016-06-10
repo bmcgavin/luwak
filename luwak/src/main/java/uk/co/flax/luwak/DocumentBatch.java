@@ -192,7 +192,7 @@ public abstract class DocumentBatch implements Closeable, Iterable<InputDocument
 
         MultiDocumentBatch(List<InputDocument> docs, Similarity similarity) {
             super(docs, similarity);
-            System.out.println("MutiDocumentBatch");
+            //DEBUG System.out.println("MutiDocumentBatch");
             assert docs.size() > 1;
             IndexWriterConfig iwc = new IndexWriterConfig(docs.get(0).getAnalyzers()).setSimilarity(similarity);
             try (IndexWriter writer = new IndexWriter(directory, iwc)) {
@@ -248,16 +248,16 @@ public abstract class DocumentBatch implements Closeable, Iterable<InputDocument
 
         private SingletonDocumentBatch(Collection<InputDocument> documents, Similarity similarity) {
             super(documents, similarity);
-            System.out.println("SingletonDocumentBatch");
+            //DEBUG System.out.println("SingletonDocumentBatch");
             assert documents.size() == 1;
             memoryindex.setSimilarity(similarity);
             try {
                 for (InputDocument doc : documents) {
                     for (IndexableField field : doc.getDocument()) {
-                        System.out.println("Adding field : " + field.name() + ":" + doc);
+                        //DEBUG System.out.println("Adding field : " + field.name() + ":" + doc);
 
                         PerFieldAnalyzerWrapper analyzers = doc.getAnalyzers();
-                        System.out.println("Analyzers : " + analyzers);
+                        //DEBUG System.out.println("Analyzers : " + analyzers);
                         TokenStream ts = field.tokenStream(doc.getAnalyzers(), null);
                         /*
                         if (field.name() == "text") {
@@ -291,8 +291,10 @@ public abstract class DocumentBatch implements Closeable, Iterable<InputDocument
                         }
                         */
 
+                        //DEBUG System.out.println("Field content : " + ts.reflectAsString(true));
                         
                         memoryindex.addField(field.name(), ts);
+                        //DEBUG System.out.println("Field content (post index): " + ts.reflectAsString(true));
                     }
                 }
             }

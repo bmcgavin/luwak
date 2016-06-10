@@ -68,11 +68,11 @@ public class QueryTermFilter {
         if (termsHash.containsKey(field)) {
             //What's in termsHash.get(field)
             BytesRefHash tH = termsHash.get(field);
-            System.out.println("termsHash size : " + tH.size());
-            System.out.println("getTerms returning : " + tH + " for " + field);
+            //DEBUG System.out.println("termsHash size : " + tH.size());
+            //DEBUG System.out.println("getTerms returning : " + tH + " for " + field);
             return termsHash.get(field);
         }
-        System.out.println("getTerms returning empty");
+        //DEBUG System.out.println("getTerms returning empty");
         return new BytesRefHash();
     }
 }

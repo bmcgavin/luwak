@@ -84,7 +84,7 @@ public class InputDocument {
      * @return a {@link PerFieldAnalyzerWrapper} describing how the different fields will be analysed
      */
     public PerFieldAnalyzerWrapper getAnalyzers() {
-        System.out.println("InputDocument.getAnalyzers");
+        //DEBUG System.out.println("InputDocument.getAnalyzers");
         return analyzers;
     }
 
@@ -128,13 +128,13 @@ public class InputDocument {
          */
         public Builder addField(String field, String text, Analyzer analyzer) {
             checkFieldName(field);
-            System.out.println("Document : " + doc);
-            System.out.println("Builder addField : " + field + ":" + text);
+            //DEBUG System.out.println("Document : " + doc);
+            //DEBUG System.out.println("Builder addField : " + field + ":" + text);
             doc.add(new Field(field, text, FIELD_TYPE));
-            System.out.println("Document : " + doc);
-            System.out.println("Builder analyzers.put");
+            //DEBUG System.out.println("Document : " + doc);
+            //DEBUG System.out.println("Builder analyzers.put");
             analyzers.put(field, analyzer);
-            System.out.println("Builder return");
+            //DEBUG System.out.println("Builder return");
             return this;
         }
 
@@ -170,7 +170,7 @@ public class InputDocument {
          * @return the InputDocument
          */
         public InputDocument build() {
-            System.out.println("InputDocument.build doc : " + doc);
+            //DEBUG System.out.println("InputDocument.build doc : " + doc);
             doc.add(new StringField(ID_FIELD, id, Field.Store.YES));
             PerFieldAnalyzerWrapper analyzerWrapper = new PerFieldAnalyzerWrapper(defaultAnalyzer, analyzers);
             return new InputDocument(id, doc, analyzerWrapper);

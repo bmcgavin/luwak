@@ -207,7 +207,7 @@ public class Monitor implements Closeable {
         @Override
         public IndexSearcher newSearcher(IndexReader reader, IndexReader previousReader) throws IOException {
             IndexSearcher searcher = super.newSearcher(reader, previousReader);
-            System.out.println("TermsHashBuilder.newSearcher : " + reader);
+            //DEBUG System.out.println("TermsHashBuilder.newSearcher : " + reader);
             termFilters.put(reader, new QueryTermFilter(reader));
             reader.addReaderClosedListener(new IndexReader.ReaderClosedListener() {
                 @Override
@@ -342,7 +342,7 @@ public class Monitor implements Closeable {
                             purgeCache.put(update.queryCacheEntry.hash, update.queryCacheEntry);
                     }
                 }
-                System.out.println("writer : " + writer);
+                //DEBUG System.out.println("writer : " + writer);
                 writer.commit();
                 manager.maybeRefresh();
             } finally {
@@ -613,7 +613,7 @@ public class Monitor implements Closeable {
     }
 
     private <T extends QueryMatch> void match(CandidateMatcher<T> matcher) throws IOException {
-        System.out.println("MATCH");
+        //DEBUG System.out.println("MATCH");
 
         long buildTime = System.nanoTime();
         MatchingCollector<T> collector = new MatchingCollector<>(matcher);
@@ -622,17 +622,17 @@ public class Monitor implements Closeable {
         //LeafReader matchReader = null;
         QueryTermFilter termFilter = null;
         try {
-            System.out.println("collector : " + collector);
-            System.out.println("matcher : " + matcher);
-            System.out.println("presearcher : " + presearcher);
+            //DEBUG System.out.println("collector : " + collector);
+            //DEBUG System.out.println("matcher : " + matcher);
+            //DEBUG System.out.println("presearcher : " + presearcher);
             searcher = getSearcher(collector);
-            System.out.println("searcher : " + searcher);
+            //DEBUG System.out.println("searcher : " + searcher);
             searchReader = searcher.getIndexReader();
-            System.out.println("searchReader : " + searchReader);
+            //DEBUG System.out.println("searchReader : " + searchReader);
             termFilter = termFilters.get(searchReader);
-            System.out.println("termFilter : " + termFilter);
+            //DEBUG System.out.println("termFilter : " + termFilter);
             Query query = presearcher.buildQuery(matcher.getIndexReader(), termFilter);
-            System.out.println("Query : " + query);
+            //DEBUG System.out.println("Query : " + query);
             buildTime = (System.nanoTime() - buildTime) / 1000000;
             searcher.search(query, collector);
         }
@@ -753,7 +753,7 @@ public class Monitor implements Closeable {
      */
     protected Document buildIndexableQuery(String id, MonitorQuery mq, QueryCacheEntry query) {
         Document doc = presearcher.indexQuery(query.matchQuery, mq.getMetadata());
-        System.out.println("buildIndexableQuery : " + query.matchQuery);
+        //DEBUG System.out.println("buildIndexableQuery : " + query.matchQuery);
         doc.add(new StringField(FIELDS.id, id, Field.Store.NO));
         doc.add(new StringField(FIELDS.del, id, Field.Store.NO));
         doc.add(new SortedDocValuesField(FIELDS.id, new BytesRef(id)));
@@ -774,7 +774,7 @@ public class Monitor implements Closeable {
 
         @Override
         protected void doMatch(int doc, String queryId, BytesRef hash) throws IOException {
-            System.out.println("MatchingCollector.doMatch : " + queryId + ":" + hash);
+            //DEBUG System.out.println("MatchingCollector.doMatch : " + queryId + ":" + hash);
             try {
                 QueryCacheEntry entry = queries.get(hash);
                 if (entry != null)

@@ -83,44 +83,44 @@ public class TermFilteredPresearcher extends Presearcher {
     public final Query buildQuery(LeafReader reader, QueryTermFilter queryTermFilter) {
         try {
             DocumentQueryBuilder queryBuilder = getQueryBuilder();
-            System.out.println("DocumentQueryBuilder : " + queryBuilder);
-            System.out.println("QueryTermFilter : " + queryTermFilter);
+            //DEBUG System.out.println("DocumentQueryBuilder : " + queryBuilder);
+            //DEBUG System.out.println("QueryTermFilter : " + queryTermFilter);
             for (String field : reader.fields()) {
 
-                System.out.println("Adding field " + field);
+                //DEBUG System.out.println("Adding field " + field);
                 TokenStream ts = new TermsEnumTokenStream(reader.terms(field).iterator());
-                System.out.println("tokenstream (new) : " + ts);
+                //DEBUG System.out.println("tokenstream (new) : " + ts);
                 for (PresearcherComponent component : components) {
                     ts = component.filterDocumentTokens(field, ts);
                 }
-                System.out.println("tokenstream (postloop) : " + ts);
+                //DEBUG System.out.println("tokenstream (postloop) : " + ts);
 
-                System.out.println("qTF.gT : " + queryTermFilter.getTerms(field));
+                //DEBUG System.out.println("qTF.gT : " + queryTermFilter.getTerms(field));
                 
                 ts = new BytesRefFilteredTokenFilter(ts, queryTermFilter.getTerms(field));
-                System.out.println("tokenstream (after brftf) : " + ts);
+                //DEBUG System.out.println("tokenstream (after brftf) : " + ts);
 
                 TermToBytesRefAttribute termAtt = ts.addAttribute(TermToBytesRefAttribute.class);
-                System.out.println("tokenstream (after addattribute) : " + ts);
+                //DEBUG System.out.println("tokenstream (after addattribute) : " + ts);
                 while (ts.incrementToken()) {
                     queryBuilder.addTerm(field, BytesRef.deepCopyOf(termAtt.getBytesRef()));
                 }
-                System.out.println("Out of while");
+                //DEBUG System.out.println("Out of while");
 
             }
             Query presearcherQuery = queryBuilder.build();
 
-            System.out.println("presearcherQuery (prebuild) : " + presearcherQuery);
+            //DEBUG System.out.println("presearcherQuery (prebuild) : " + presearcherQuery);
             BooleanQuery.Builder bq = new BooleanQuery.Builder();
             bq.add(presearcherQuery, BooleanClause.Occur.SHOULD);
             bq.add(new TermQuery(new Term(ANYTOKEN_FIELD, ANYTOKEN)), BooleanClause.Occur.SHOULD);
             presearcherQuery = bq.build();
-            System.out.println("presearcherQuery (build) : " + presearcherQuery);
+            //DEBUG System.out.println("presearcherQuery (build) : " + presearcherQuery);
 
             for (PresearcherComponent component : components) {
                 presearcherQuery = component.adjustPresearcherQuery(reader, presearcherQuery);
             }
-            System.out.println("presearcherQuery (adjust) : " + presearcherQuery);
+            //DEBUG System.out.println("presearcherQuery (adjust) : " + presearcherQuery);
 
             return presearcherQuery;
         }
@@ -139,7 +139,7 @@ public class TermFilteredPresearcher extends Presearcher {
         TermsEnum te = t.iterator();
         BytesRef term;
         while ((term = te.next()) != null) {
-            System.out.println("Adding term : " + term);
+            //DEBUG System.out.println("Adding term : " + term);
             terms.add(term);
         }
         return terms;
@@ -152,13 +152,13 @@ public class TermFilteredPresearcher extends Presearcher {
 
             @Override
             public void addTerm(String field, BytesRef term) throws IOException {
-                System.out.println("Adding term : " + field + ":" + term);
+                //DEBUG System.out.println("Adding term : " + field + ":" + term);
                 terms.add(new Term(field, term));
             }
 
             @Override
             public Query build() {
-                System.out.println("Building termsQuery : " + terms);
+                //DEBUG System.out.println("Building termsQuery : " + terms);
                 return new TermsQuery(terms);
             }
         };
@@ -204,7 +204,7 @@ public class TermFilteredPresearcher extends Presearcher {
             doc.add(new Field(entry.getKey(),
                     new TermsEnumTokenStream(new BytesRefHashIterator(entry.getValue())), QUERYFIELDTYPE));
         }
-        System.out.println("TFP.buildQueryDocument : " + doc);
+        //DEBUG System.out.println("TFP.buildQueryDocument : " + doc);
         return doc;
     }
 
@@ -263,7 +263,7 @@ public class TermFilteredPresearcher extends Presearcher {
                 }
             }
         }
-        System.out.println("TFP.collectTerms : " + fieldTerms);
+        //DEBUG System.out.println("TFP.collectTerms : " + fieldTerms);
         return fieldTerms;
     }
 

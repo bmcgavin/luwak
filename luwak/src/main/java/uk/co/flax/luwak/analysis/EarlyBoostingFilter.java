@@ -22,12 +22,18 @@ import java.io.IOException;
 import org.apache.lucene.analysis.TokenFilter;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
+import org.apache.lucene.analysis.tokenattributes.OffsetAttribute;
+import org.apache.lucene.search.BoostAttribute;
 
 /**
  * TokenFilter that removes possessives (trailing 's) from words.
  */
 public final class EarlyBoostingFilter extends TokenFilter {
   private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
+  private final OffsetAttribute offsetAtt = addAttribute(OffsetAttribute.class);
+  private final BoostAttribute boostAtt = addAttribute(BoostAttribute.class);
+
+  private float boostFactor = 100.0f;
 
   public EarlyBoostingFilter(TokenStream input) {
     super(input);
@@ -38,11 +44,18 @@ public final class EarlyBoostingFilter extends TokenFilter {
     if (!input.incrementToken()) {
       return false;
     }
+    //DEBUG System.out.println("EarlyBoostingFilter offsetAtt.startOffset() : " + offsetAtt.startOffset());
     
     final char[] buffer = termAtt.buffer();
     final int bufferLength = termAtt.length();
     
-    termAtt.append("^2.0");
+    boostAtt.setBoost(boostFactor);
+    if (boostFactor > 1.0f) {
+        boostFactor /= 10.0f;
+    }
+    //DEBUG System.out.println("EarlyBoostingFilter termAtt : " + termAtt);
+    //DEBUG System.out.println("EarlyBoostingFilter boostAtt : " + boostAtt.getBoost());
+    //DEBUG System.out.println("input refelct : " + input.reflectAsString(true));
 
     return true;
   }

@@ -63,7 +63,7 @@ public abstract class CandidateMatcher<T extends QueryMatch> {
      * @throws IOException on IO errors
      */
     public final void matchQuery(String queryId, Query matchQuery, Map<String, String> metadata) throws IOException {
-        System.out.println("CandidateMatcher.matchQuery : " + queryId + ":" + matchQuery);
+        //DEBUG System.out.println("CandidateMatcher.matchQuery : " + queryId + ":" + matchQuery);
         presearcherHits.add(queryId);
         doMatchQuery(queryId, matchQuery, metadata);
     }
@@ -85,11 +85,11 @@ public abstract class CandidateMatcher<T extends QueryMatch> {
             matches.put(docId, docMatches);
         }
         if (docMatches.matches.containsKey(queryId)) {
-            System.out.println("CandidateMatcher.addMatch(containsKey) : " + resolve(match, docMatches.matches.get(queryId)));
+            //DEBUG System.out.println("CandidateMatcher.addMatch(containsKey) : " + resolve(match, docMatches.matches.get(queryId)));
             docMatches.matches.put(queryId, resolve(match, docMatches.matches.get(queryId)));
         }
         else {
-            System.out.println("CandidateMatcher.addMatch(else) : " + match);
+            //DEBUG System.out.println("CandidateMatcher.addMatch(else) : " + match);
             docMatches.matches.put(queryId, match);
         }
     }
