@@ -207,7 +207,7 @@ public class Monitor implements Closeable {
         @Override
         public IndexSearcher newSearcher(IndexReader reader, IndexReader previousReader) throws IOException {
             IndexSearcher searcher = super.newSearcher(reader, previousReader);
-            //DEBUG System.out.println("TermsHashBuilder.newSearcher : " + reader);
+            if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("TermsHashBuilder.newSearcher : " + reader);
             termFilters.put(reader, new QueryTermFilter(reader));
             reader.addReaderClosedListener(new IndexReader.ReaderClosedListener() {
                 @Override
@@ -335,14 +335,14 @@ public class Monitor implements Closeable {
                     }
                     for (Indexable update : updates) {
                         this.queries.put(update.queryCacheEntry.hash, update.queryCacheEntry);
-                        //DEBUG System.out.println("Adding cacheEntry.matchQuery : " + update.queryCacheEntry.matchQuery);
-                        //DEBUG System.out.println("Adding document : " + update.document);
+                        if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("Adding cacheEntry.matchQuery : " + update.queryCacheEntry.matchQuery);
+                        if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("Adding document : " + update.document);
                         writer.addDocument(update.document);
                         if (purgeCache != null)
                             purgeCache.put(update.queryCacheEntry.hash, update.queryCacheEntry);
                     }
                 }
-                //DEBUG System.out.println("writer : " + writer);
+                if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("writer : " + writer);
                 writer.commit();
                 manager.maybeRefresh();
             } finally {
@@ -613,7 +613,7 @@ public class Monitor implements Closeable {
     }
 
     private <T extends QueryMatch> void match(CandidateMatcher<T> matcher) throws IOException {
-        //DEBUG System.out.println("MATCH");
+        if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("MATCH");
 
         long buildTime = System.nanoTime();
         MatchingCollector<T> collector = new MatchingCollector<>(matcher);
@@ -622,17 +622,17 @@ public class Monitor implements Closeable {
         //LeafReader matchReader = null;
         QueryTermFilter termFilter = null;
         try {
-            //DEBUG System.out.println("collector : " + collector);
-            //DEBUG System.out.println("matcher : " + matcher);
-            //DEBUG System.out.println("presearcher : " + presearcher);
+            if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("collector : " + collector);
+            if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("matcher : " + matcher);
+            if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("presearcher : " + presearcher);
             searcher = getSearcher(collector);
-            //DEBUG System.out.println("searcher : " + searcher);
+            if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("searcher : " + searcher);
             searchReader = searcher.getIndexReader();
-            //DEBUG System.out.println("searchReader : " + searchReader);
+            if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("searchReader : " + searchReader);
             termFilter = termFilters.get(searchReader);
-            //DEBUG System.out.println("termFilter : " + termFilter);
+            if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("termFilter : " + termFilter);
             Query query = presearcher.buildQuery(matcher.getIndexReader(), termFilter);
-            //DEBUG System.out.println("Query : " + query);
+            if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("Query : " + query);
             buildTime = (System.nanoTime() - buildTime) / 1000000;
             searcher.search(query, collector);
         }
@@ -753,7 +753,7 @@ public class Monitor implements Closeable {
      */
     protected Document buildIndexableQuery(String id, MonitorQuery mq, QueryCacheEntry query) {
         Document doc = presearcher.indexQuery(query.matchQuery, mq.getMetadata());
-        //DEBUG System.out.println("buildIndexableQuery : " + query.matchQuery);
+        if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("buildIndexableQuery : " + query.matchQuery);
         doc.add(new StringField(FIELDS.id, id, Field.Store.NO));
         doc.add(new StringField(FIELDS.del, id, Field.Store.NO));
         doc.add(new SortedDocValuesField(FIELDS.id, new BytesRef(id)));
@@ -774,7 +774,7 @@ public class Monitor implements Closeable {
 
         @Override
         protected void doMatch(int doc, String queryId, BytesRef hash) throws IOException {
-            //DEBUG System.out.println("MatchingCollector.doMatch : " + queryId + ":" + hash);
+            if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("MatchingCollector.doMatch : " + queryId + ":" + hash);
             try {
                 QueryCacheEntry entry = queries.get(hash);
                 if (entry != null)

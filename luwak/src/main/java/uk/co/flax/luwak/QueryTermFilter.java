@@ -50,12 +50,12 @@ public class QueryTermFilter {
                 TermsEnum te = t.iterator();
                 BytesRef term;
                 while ((term = te.next()) != null) {
-                    //DEBUG System.out.println("QTF Adding term : " + new String(term.bytes, "UTF8"));
+                    if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("QTF Adding term : " + new String(term.bytes, "UTF8"));
                     terms.add(term);
                 }
             }
             termsHash.put(field, terms);
-            //DEBUG System.out.println("QTF termsHash put : " + field + ":" + terms);
+            if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("QTF termsHash put : " + field + ":" + terms);
         }
     }
 
@@ -68,11 +68,11 @@ public class QueryTermFilter {
         if (termsHash.containsKey(field)) {
             //What's in termsHash.get(field)
             BytesRefHash tH = termsHash.get(field);
-            //DEBUG System.out.println("termsHash size : " + tH.size());
-            //DEBUG System.out.println("getTerms returning : " + tH + " for " + field);
+            if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("termsHash size : " + tH.size());
+            if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("getTerms returning : " + tH + " for " + field);
             return termsHash.get(field);
         }
-        //DEBUG System.out.println("getTerms returning empty");
+        if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("getTerms returning empty");
         return new BytesRefHash();
     }
 }

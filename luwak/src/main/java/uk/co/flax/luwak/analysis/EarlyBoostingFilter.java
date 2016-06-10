@@ -44,7 +44,7 @@ public final class EarlyBoostingFilter extends TokenFilter {
     if (!input.incrementToken()) {
       return false;
     }
-    //DEBUG System.out.println("EarlyBoostingFilter offsetAtt.startOffset() : " + offsetAtt.startOffset());
+    if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("EarlyBoostingFilter offsetAtt.startOffset() : " + offsetAtt.startOffset());
     
     final char[] buffer = termAtt.buffer();
     final int bufferLength = termAtt.length();
@@ -53,9 +53,9 @@ public final class EarlyBoostingFilter extends TokenFilter {
     if (boostFactor > 1.0f) {
         boostFactor /= 10.0f;
     }
-    //DEBUG System.out.println("EarlyBoostingFilter termAtt : " + termAtt);
-    //DEBUG System.out.println("EarlyBoostingFilter boostAtt : " + boostAtt.getBoost());
-    //DEBUG System.out.println("input refelct : " + input.reflectAsString(true));
+    if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("EarlyBoostingFilter termAtt : " + termAtt);
+    if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("EarlyBoostingFilter boostAtt : " + boostAtt.getBoost());
+    if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("input refelct : " + input.reflectAsString(true));
 
     return true;
   }

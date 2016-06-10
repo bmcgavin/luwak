@@ -83,44 +83,44 @@ public class TermFilteredPresearcher extends Presearcher {
     public final Query buildQuery(LeafReader reader, QueryTermFilter queryTermFilter) {
         try {
             DocumentQueryBuilder queryBuilder = getQueryBuilder();
-            //DEBUG System.out.println("DocumentQueryBuilder : " + queryBuilder);
-            //DEBUG System.out.println("QueryTermFilter : " + queryTermFilter);
+            if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("DocumentQueryBuilder : " + queryBuilder);
+            if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("QueryTermFilter : " + queryTermFilter);
             for (String field : reader.fields()) {
 
-                //DEBUG System.out.println("Adding field " + field);
+                if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("Adding field " + field);
                 TokenStream ts = new TermsEnumTokenStream(reader.terms(field).iterator());
-                //DEBUG System.out.println("tokenstream (new) : " + ts);
+                if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("tokenstream (new) : " + ts);
                 for (PresearcherComponent component : components) {
                     ts = component.filterDocumentTokens(field, ts);
                 }
-                //DEBUG System.out.println("tokenstream (postloop) : " + ts);
+                if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("tokenstream (postloop) : " + ts);
 
-                //DEBUG System.out.println("qTF.gT : " + queryTermFilter.getTerms(field));
+                if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("qTF.gT : " + queryTermFilter.getTerms(field));
                 
                 ts = new BytesRefFilteredTokenFilter(ts, queryTermFilter.getTerms(field));
-                //DEBUG System.out.println("tokenstream (after brftf) : " + ts);
+                if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("tokenstream (after brftf) : " + ts);
 
                 TermToBytesRefAttribute termAtt = ts.addAttribute(TermToBytesRefAttribute.class);
-                //DEBUG System.out.println("tokenstream (after addattribute) : " + ts);
+                if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("tokenstream (after addattribute) : " + ts);
                 while (ts.incrementToken()) {
                     queryBuilder.addTerm(field, BytesRef.deepCopyOf(termAtt.getBytesRef()));
                 }
-                //DEBUG System.out.println("Out of while");
+                if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("Out of while");
 
             }
             Query presearcherQuery = queryBuilder.build();
 
-            //DEBUG System.out.println("presearcherQuery (prebuild) : " + presearcherQuery);
+            if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("presearcherQuery (prebuild) : " + presearcherQuery);
             BooleanQuery.Builder bq = new BooleanQuery.Builder();
             bq.add(presearcherQuery, BooleanClause.Occur.SHOULD);
             bq.add(new TermQuery(new Term(ANYTOKEN_FIELD, ANYTOKEN)), BooleanClause.Occur.SHOULD);
             presearcherQuery = bq.build();
-            //DEBUG System.out.println("presearcherQuery (build) : " + presearcherQuery);
+            if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("presearcherQuery (build) : " + presearcherQuery);
 
             for (PresearcherComponent component : components) {
                 presearcherQuery = component.adjustPresearcherQuery(reader, presearcherQuery);
             }
-            //DEBUG System.out.println("presearcherQuery (adjust) : " + presearcherQuery);
+            if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("presearcherQuery (adjust) : " + presearcherQuery);
 
             return presearcherQuery;
         }
@@ -139,7 +139,7 @@ public class TermFilteredPresearcher extends Presearcher {
         TermsEnum te = t.iterator();
         BytesRef term;
         while ((term = te.next()) != null) {
-            //DEBUG System.out.println("Adding term : " + term);
+            if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("Adding term : " + term);
             terms.add(term);
         }
         return terms;
@@ -152,13 +152,13 @@ public class TermFilteredPresearcher extends Presearcher {
 
             @Override
             public void addTerm(String field, BytesRef term) throws IOException {
-                //DEBUG System.out.println("Adding term : " + field + ":" + term);
+                if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("Adding term : " + field + ":" + term);
                 terms.add(new Term(field, term));
             }
 
             @Override
             public Query build() {
-                //DEBUG System.out.println("Building termsQuery : " + terms);
+                if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("Building termsQuery : " + terms);
                 return new TermsQuery(terms);
             }
         };
@@ -175,8 +175,8 @@ public class TermFilteredPresearcher extends Presearcher {
     public final Document indexQuery(Query query, Map<String, String> metadata) {
 
         QueryTree querytree = extractor.buildTree(query);
-        //DEBUG System.out.println("indexQuery outputting query tree");
-        //DEBUG showQueryTree(query, System.out);
+        if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("indexQuery outputting query tree");
+        if (System.getProperty("luwak.debug", "false").equals("true")) showQueryTree(query, System.out);
         Document doc = buildQueryDocument(querytree);
 
         for (PresearcherComponent component : components) {
@@ -200,11 +200,11 @@ public class TermFilteredPresearcher extends Presearcher {
         Map<String, BytesRefHash> fieldTerms = collectTerms(querytree);
         Document doc = new Document();
         for (Map.Entry<String, BytesRefHash> entry : fieldTerms.entrySet()) {
-            //DEBUG System.out.println("Adding new field to : " + entry.getKey() + ":" + entry.getValue());
+            if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("Adding new field to : " + entry.getKey() + ":" + entry.getValue());
             doc.add(new Field(entry.getKey(),
                     new TermsEnumTokenStream(new BytesRefHashIterator(entry.getValue())), QUERYFIELDTYPE));
         }
-        //DEBUG System.out.println("TFP.buildQueryDocument : " + doc);
+        if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("TFP.buildQueryDocument : " + doc);
         return doc;
     }
 
@@ -236,7 +236,7 @@ public class TermFilteredPresearcher extends Presearcher {
     protected Map<String, BytesRefHash> collectTerms(QueryTree tree) {
 
         Map<String, BytesRefHash> fieldTerms = new HashMap<>();
-        //DEBUG System.out.println("TFP in collectTerms : " + tree);
+        if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("TFP in collectTerms : " + tree);
 
         for (QueryTerm queryTerm : extractor.collectTerms(tree)) {
             if (queryTerm.type.equals(QueryTerm.Type.ANY)) {
@@ -263,7 +263,7 @@ public class TermFilteredPresearcher extends Presearcher {
                 }
             }
         }
-        //DEBUG System.out.println("TFP.collectTerms : " + fieldTerms);
+        if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("TFP.collectTerms : " + fieldTerms);
         return fieldTerms;
     }
 

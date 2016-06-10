@@ -53,12 +53,12 @@ public class TreeWeightor {
     }
 
     public float combine(Collection<QueryTree> children) {
-        //DEBUG System.out.println("TreeWeightor in combine");
+        if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("TreeWeightor in combine");
         return combinePolicy.combine(this, children);
     }
 
     public QueryTree select(Set<QueryTree> children) {
-        //DEBUG System.out.println("TreeWeightor in select");
+        if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("TreeWeightor in select");
         if (children.size() == 0)
             throw new IllegalArgumentException("Cannot select child from empty list");
 
@@ -75,7 +75,7 @@ public class TreeWeightor {
     }
 
     public float weigh(QueryTerm term) {
-        //DEBUG System.out.println("TreeWeightor in weigh : " + term);
+        if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("TreeWeightor in weigh : " + term);
         return weightPolicy.weigh(term);
     }
 

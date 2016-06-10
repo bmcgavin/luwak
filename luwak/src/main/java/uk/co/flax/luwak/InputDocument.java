@@ -84,7 +84,7 @@ public class InputDocument {
      * @return a {@link PerFieldAnalyzerWrapper} describing how the different fields will be analysed
      */
     public PerFieldAnalyzerWrapper getAnalyzers() {
-        //DEBUG System.out.println("InputDocument.getAnalyzers");
+        if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("InputDocument.getAnalyzers");
         return analyzers;
     }
 
@@ -128,13 +128,13 @@ public class InputDocument {
          */
         public Builder addField(String field, String text, Analyzer analyzer) {
             checkFieldName(field);
-            //DEBUG System.out.println("Document : " + doc);
-            //DEBUG System.out.println("Builder addField : " + field + ":" + text);
+            if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("Document : " + doc);
+            if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("Builder addField : " + field + ":" + text);
             doc.add(new Field(field, text, FIELD_TYPE));
-            //DEBUG System.out.println("Document : " + doc);
-            //DEBUG System.out.println("Builder analyzers.put");
+            if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("Document : " + doc);
+            if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("Builder analyzers.put");
             analyzers.put(field, analyzer);
-            //DEBUG System.out.println("Builder return");
+            if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("Builder return");
             return this;
         }
 
@@ -170,7 +170,7 @@ public class InputDocument {
          * @return the InputDocument
          */
         public InputDocument build() {
-            //DEBUG System.out.println("InputDocument.build doc : " + doc);
+            if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("InputDocument.build doc : " + doc);
             doc.add(new StringField(ID_FIELD, id, Field.Store.YES));
             PerFieldAnalyzerWrapper analyzerWrapper = new PerFieldAnalyzerWrapper(defaultAnalyzer, analyzers);
             return new InputDocument(id, doc, analyzerWrapper);

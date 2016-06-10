@@ -64,27 +64,29 @@ public class EarlyTermBoosterPresearcherComponent extends PresearcherComponent {
     public Query adjustPresearcherQuery(LeafReader reader, Query presearcherQuery) throws IOException {
 
         Query filterClause = buildFilterClause(reader);
-        //DEBUG System.out.println("ETBP.filterClause : " + filterClause);
+        if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("ETBP.filterClause : " + filterClause);
 
         if (filterClause == null) {
-            //DEBUG System.out.println("ETBP return pQ");
+            if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("ETBP return pQ");
             return presearcherQuery;
         }
 
         return filterClause;
-        //BooleanQuery.Builder bq = new BooleanQuery.Builder();
-        //bq.add(presearcherQuery, BooleanClause.Occur.MUST);
-        //DEBUG System.out.println("Fucking dumb presearcherQuery : " + presearcherQuery);
-        //bq.add(filterClause, BooleanClause.Occur.MUST_NOT);
-        //DEBUG System.out.println("ETBP.adjustPresearcherQuery returning : " + bq.build());
-        //return bq.build();
+        /*
+        BooleanQuery.Builder bq = new BooleanQuery.Builder();
+        bq.add(presearcherQuery, BooleanClause.Occur.MUST);
+        if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("Fucking dumb presearcherQuery : " + presearcherQuery);
+        bq.add(filterClause, BooleanClause.Occur.MUST_NOT);
+        if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("ETBP.adjustPresearcherQuery returning : " + bq.build());
+        return bq.build();
+        */
     }
 
     private Query buildFilterClause(LeafReader reader) throws IOException {
 
-        //DEBUG System.out.println("Reader class : " + reader.getClass());
+        if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("Reader class : " + reader.getClass());
         Terms terms = reader.fields().terms(field);
-        //DEBUG System.out.println("Terms hasPositions() : " + terms.hasPositions());
+        if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("Terms hasPositions() : " + terms.hasPositions());
         if (terms == null)
             return null;
 
@@ -94,7 +96,7 @@ public class EarlyTermBoosterPresearcherComponent extends PresearcherComponent {
 
         BytesRef term;
         TermsEnum te = terms.iterator();
-        //DEBUG System.out.println("ETBP terms size : " + terms.size());
+        if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("ETBP terms size : " + terms.size());
         long boostFactor = terms.size();
         long queryLength = 0;
         TermQuery tq = null;
@@ -106,14 +108,14 @@ public class EarlyTermBoosterPresearcherComponent extends PresearcherComponent {
         te = terms.iterator();
         
         while ((term = te.next()) != null) {
-            //DEBUG System.out.println("Term offset : " + term.offset);
-            //DEBUG System.out.println("Boost factor : " + (float)queryLength / (float)term.offset);
+            if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("Term offset : " + term.offset);
+            if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("Boost factor : " + (float)queryLength / (float)term.offset);
             // we need to check that every document in the batch has the same field values, otherwise
             // this filtering will not work
             if (te.docFreq() != docsInBatch)
                 throw new IllegalArgumentException("Some documents in this batch do not have a term value of "
                                                     + field + ":" + Term.toString(term));
-            //DEBUG System.out.println("ETBPC term : " +  BytesRef.deepCopyOf(term));
+            if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("ETBPC term : " +  BytesRef.deepCopyOf(term));
             tq = new TermQuery(new Term(field, BytesRef.deepCopyOf(term)));
             tq.setBoost((float)queryLength / (float)term.offset);
             //tq.setBoost(0.0f);

@@ -71,17 +71,17 @@ public class ReportingWeightor extends TreeWeightor {
 
         @Override
         public void reportTerm(float weight, QueryTerm term) {
-            //DEBUG System.out.println("Term: " + term + " weight: " + weight);
+            if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("Term: " + term + " weight: " + weight);
         }
 
         @Override
         public void reportSelected(QueryTree selected, Set<QueryTree> children) {
-            //DEBUG System.out.println("Selected " + selected + "\n\tfrom " + children);
+            if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("Selected " + selected + "\n\tfrom " + children);
         }
 
         @Override
         public void reportCombination(float weight, Collection<QueryTree> children) {
-            //DEBUG System.out.println("Derived weight " + weight + " from combination of " + children);
+            if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("Derived weight " + weight + " from combination of " + children);
         }
 
 
