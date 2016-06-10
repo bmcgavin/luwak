@@ -29,6 +29,12 @@ import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.RAMDirectory;
 import org.apache.lucene.util.IOUtils;
 
+import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.tokenattributes.TermToBytesRefAttribute;
+import org.apache.lucene.analysis.tokenattributes.OffsetAttribute;
+import org.apache.lucene.search.BoostAttribute;
+import org.apache.lucene.analysis.miscellaneous.PerFieldAnalyzerWrapper;
+
 /**
  * A collection of InputDocuments to be matched.
  *
@@ -56,6 +62,13 @@ public abstract class DocumentBatch implements Closeable, Iterable<InputDocument
     /**
      * Create a DocumentBatch containing a single InputDocument
      */
+    public static DocumentBatch of(InputDocument doc, Similarity sim) throws IOException {
+        return new DocumentBatch.Builder().add(doc).setSimilarity(sim).build();
+    }
+ 
+    /**
+     * Create a DocumentBatch containing a single InputDocument
+     */
     public static DocumentBatch of(InputDocument doc) throws IOException {
         return new DocumentBatch.Builder().add(doc).build();
     }
@@ -70,10 +83,24 @@ public abstract class DocumentBatch implements Closeable, Iterable<InputDocument
     /**
      * Create a DocumentBatch containing a set of InputDocuments
      */
+    public static DocumentBatch of(Collection<InputDocument> docs, Similarity sim) {
+        return new DocumentBatch.Builder().addAll(docs).setSimilarity(sim).build();
+    }
+
+    /**
+     * Create a DocumentBatch containing a set of InputDocuments
+     */
     public static DocumentBatch of(InputDocument... docs) throws IOException {
         return of(Arrays.asList(docs));
     }
 
+    /**
+     * Create a DocumentBatch containing a set of InputDocuments
+     */
+    public static DocumentBatch of(Similarity sim, InputDocument... docs) throws IOException {
+        return of(Arrays.asList(docs), sim);
+    }
+    
     /**
      * Builder class for DocumentBatch
      */
@@ -165,6 +192,7 @@ public abstract class DocumentBatch implements Closeable, Iterable<InputDocument
 
         MultiDocumentBatch(List<InputDocument> docs, Similarity similarity) {
             super(docs, similarity);
+            System.out.println("MutiDocumentBatch");
             assert docs.size() > 1;
             IndexWriterConfig iwc = new IndexWriterConfig(docs.get(0).getAnalyzers()).setSimilarity(similarity);
             try (IndexWriter writer = new IndexWriter(directory, iwc)) {
@@ -220,12 +248,51 @@ public abstract class DocumentBatch implements Closeable, Iterable<InputDocument
 
         private SingletonDocumentBatch(Collection<InputDocument> documents, Similarity similarity) {
             super(documents, similarity);
+            System.out.println("SingletonDocumentBatch");
             assert documents.size() == 1;
             memoryindex.setSimilarity(similarity);
             try {
                 for (InputDocument doc : documents) {
                     for (IndexableField field : doc.getDocument()) {
-                        memoryindex.addField(field.name(), field.tokenStream(doc.getAnalyzers(), null));
+                        System.out.println("Adding field : " + field.name() + ":" + doc);
+
+                        PerFieldAnalyzerWrapper analyzers = doc.getAnalyzers();
+                        System.out.println("Analyzers : " + analyzers);
+                        TokenStream ts = field.tokenStream(doc.getAnalyzers(), null);
+                        /*
+                        if (field.name() == "text") {
+                            OffsetAttribute oa = ts.addAttribute(OffsetAttribute.class);
+                            BoostAttribute ba = ts.addAttribute(BoostAttribute.class);
+
+                            float boost = 10.0f;
+                            ts.reset();
+                            while (ts.incrementToken()) {
+                                System.out.println("Field content : " + ts.reflectAsString(true));
+                                System.out.println("Field offset : " + oa.startOffset());
+                                System.out.println("Field boost : " + ba.getBoost());
+                                ba.setBoost(boost);
+                                if (boost >= 2.0f) {
+                                    boost -= 1.0f;
+                                }
+                                System.out.println("Field boost : " + ba.getBoost());
+                            }
+                            ts.end();
+                            ts.close();
+
+                            ts.reset();
+                            ba = ts.addAttribute(BoostAttribute.class);
+                            while (ts.incrementToken()) {
+                                System.out.println("Field content : " + ts.reflectAsString(true));
+                                System.out.println("Field boost : " + ba.getBoost());
+                            }
+                            ts.end();
+                            ts.close();
+                            ts.reset();
+                        }
+                        */
+
+                        
+                        memoryindex.addField(field.name(), ts);
                     }
                 }
             }
