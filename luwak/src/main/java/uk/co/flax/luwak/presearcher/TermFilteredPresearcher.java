@@ -84,20 +84,28 @@ public class TermFilteredPresearcher extends Presearcher {
         try {
             DocumentQueryBuilder queryBuilder = getQueryBuilder();
             System.out.println("DocumentQueryBuilder : " + queryBuilder);
+            System.out.println("QueryTermFilter : " + queryTermFilter);
             for (String field : reader.fields()) {
 
                 System.out.println("Adding field " + field);
                 TokenStream ts = new TermsEnumTokenStream(reader.terms(field).iterator());
+                System.out.println("tokenstream (new) : " + ts);
                 for (PresearcherComponent component : components) {
                     ts = component.filterDocumentTokens(field, ts);
                 }
+                System.out.println("tokenstream (postloop) : " + ts);
 
+                System.out.println("qTF.gT : " + queryTermFilter.getTerms(field));
+                
                 ts = new BytesRefFilteredTokenFilter(ts, queryTermFilter.getTerms(field));
+                System.out.println("tokenstream (after brftf) : " + ts);
 
                 TermToBytesRefAttribute termAtt = ts.addAttribute(TermToBytesRefAttribute.class);
+                System.out.println("tokenstream (after addattribute) : " + ts);
                 while (ts.incrementToken()) {
                     queryBuilder.addTerm(field, BytesRef.deepCopyOf(termAtt.getBytesRef()));
                 }
+                System.out.println("Out of while");
 
             }
             Query presearcherQuery = queryBuilder.build();
@@ -131,6 +139,7 @@ public class TermFilteredPresearcher extends Presearcher {
         TermsEnum te = t.iterator();
         BytesRef term;
         while ((term = te.next()) != null) {
+            System.out.println("Adding term : " + term);
             terms.add(term);
         }
         return terms;
@@ -143,11 +152,13 @@ public class TermFilteredPresearcher extends Presearcher {
 
             @Override
             public void addTerm(String field, BytesRef term) throws IOException {
+                System.out.println("Adding term : " + field + ":" + term);
                 terms.add(new Term(field, term));
             }
 
             @Override
             public Query build() {
+                System.out.println("Building termsQuery : " + terms);
                 return new TermsQuery(terms);
             }
         };
@@ -164,6 +175,8 @@ public class TermFilteredPresearcher extends Presearcher {
     public final Document indexQuery(Query query, Map<String, String> metadata) {
 
         QueryTree querytree = extractor.buildTree(query);
+        //DEBUG System.out.println("indexQuery outputting query tree");
+        //DEBUG showQueryTree(query, System.out);
         Document doc = buildQueryDocument(querytree);
 
         for (PresearcherComponent component : components) {
@@ -187,9 +200,11 @@ public class TermFilteredPresearcher extends Presearcher {
         Map<String, BytesRefHash> fieldTerms = collectTerms(querytree);
         Document doc = new Document();
         for (Map.Entry<String, BytesRefHash> entry : fieldTerms.entrySet()) {
+            //DEBUG System.out.println("Adding new field to : " + entry.getKey() + ":" + entry.getValue());
             doc.add(new Field(entry.getKey(),
                     new TermsEnumTokenStream(new BytesRefHashIterator(entry.getValue())), QUERYFIELDTYPE));
         }
+        System.out.println("TFP.buildQueryDocument : " + doc);
         return doc;
     }
 
@@ -221,6 +236,7 @@ public class TermFilteredPresearcher extends Presearcher {
     protected Map<String, BytesRefHash> collectTerms(QueryTree tree) {
 
         Map<String, BytesRefHash> fieldTerms = new HashMap<>();
+        //DEBUG System.out.println("TFP in collectTerms : " + tree);
 
         for (QueryTerm queryTerm : extractor.collectTerms(tree)) {
             if (queryTerm.type.equals(QueryTerm.Type.ANY)) {
@@ -247,7 +263,7 @@ public class TermFilteredPresearcher extends Presearcher {
                 }
             }
         }
-
+        System.out.println("TFP.collectTerms : " + fieldTerms);
         return fieldTerms;
     }
 
