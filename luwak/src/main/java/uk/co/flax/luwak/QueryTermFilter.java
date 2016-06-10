@@ -50,10 +50,12 @@ public class QueryTermFilter {
                 TermsEnum te = t.iterator();
                 BytesRef term;
                 while ((term = te.next()) != null) {
+                    //DEBUG System.out.println("QTF Adding term : " + new String(term.bytes, "UTF8"));
                     terms.add(term);
                 }
             }
             termsHash.put(field, terms);
+            //DEBUG System.out.println("QTF termsHash put : " + field + ":" + terms);
         }
     }
 
@@ -63,8 +65,14 @@ public class QueryTermFilter {
      * @return a {@link BytesRefHash} containing all terms for the specified field
      */
     public BytesRefHash getTerms(String field) {
-        if (termsHash.containsKey(field))
+        if (termsHash.containsKey(field)) {
+            //What's in termsHash.get(field)
+            BytesRefHash tH = termsHash.get(field);
+            System.out.println("termsHash size : " + tH.size());
+            System.out.println("getTerms returning : " + tH + " for " + field);
             return termsHash.get(field);
+        }
+        System.out.println("getTerms returning empty");
         return new BytesRefHash();
     }
 }

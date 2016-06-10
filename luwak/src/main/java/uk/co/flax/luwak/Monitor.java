@@ -22,7 +22,7 @@ import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.BytesRefBuilder;
 import org.apache.lucene.util.IOUtils;
 import uk.co.flax.luwak.presearcher.PresearcherMatches;
-
+import uk.co.flax.luwak.similarities.StartBoostSimilarity;
 /*
  * Copyright (c) 2015 Lemur Consulting Ltd.
  * <p/>
@@ -189,6 +189,8 @@ public class Monitor implements Closeable {
         iwc.setMergePolicy(mergePolicy);
         iwc.setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
 
+        //iwc.setSimilarity(new StartBoostSimilarity());
+
         return new IndexWriter(directory, iwc);
 
     }
@@ -205,6 +207,7 @@ public class Monitor implements Closeable {
         @Override
         public IndexSearcher newSearcher(IndexReader reader, IndexReader previousReader) throws IOException {
             IndexSearcher searcher = super.newSearcher(reader, previousReader);
+            System.out.println("TermsHashBuilder.newSearcher : " + reader);
             termFilters.put(reader, new QueryTermFilter(reader));
             reader.addReaderClosedListener(new IndexReader.ReaderClosedListener() {
                 @Override
@@ -332,7 +335,8 @@ public class Monitor implements Closeable {
                     }
                     for (Indexable update : updates) {
                         this.queries.put(update.queryCacheEntry.hash, update.queryCacheEntry);
-                        System.out.println("Adding cacheEntry.matchQuery : " + update.queryCacheEntry.matchQuery);
+                        //DEBUG System.out.println("Adding cacheEntry.matchQuery : " + update.queryCacheEntry.matchQuery);
+                        //DEBUG System.out.println("Adding document : " + update.document);
                         writer.addDocument(update.document);
                         if (purgeCache != null)
                             purgeCache.put(update.queryCacheEntry.hash, update.queryCacheEntry);
@@ -609,25 +613,26 @@ public class Monitor implements Closeable {
     }
 
     private <T extends QueryMatch> void match(CandidateMatcher<T> matcher) throws IOException {
+        System.out.println("MATCH");
 
         long buildTime = System.nanoTime();
         MatchingCollector<T> collector = new MatchingCollector<>(matcher);
         IndexSearcher searcher = null;
         IndexReader searchReader = null;
-        LeafReader matchReader = null;
+        //LeafReader matchReader = null;
         QueryTermFilter termFilter = null;
         try {
-            searcher = getSearcher(collector);
-            searchReader = searcher.getIndexReader();
-            matchReader = matcher.getIndexReader();
-            termFilter = termFilters.get(searchReader);
-            Query query = presearcher.buildQuery(matchReader, termFilter);
-            System.out.println("Query : " + query);
-            System.out.println("termFilter : " + termFilter);
-            System.out.println("matchReader : " + matchReader);
-            System.out.println("searchReader : " + searchReader);
-            System.out.println("searcher : " + searcher);
+            System.out.println("collector : " + collector);
+            System.out.println("matcher : " + matcher);
             System.out.println("presearcher : " + presearcher);
+            searcher = getSearcher(collector);
+            System.out.println("searcher : " + searcher);
+            searchReader = searcher.getIndexReader();
+            System.out.println("searchReader : " + searchReader);
+            termFilter = termFilters.get(searchReader);
+            System.out.println("termFilter : " + termFilter);
+            Query query = presearcher.buildQuery(matcher.getIndexReader(), termFilter);
+            System.out.println("Query : " + query);
             buildTime = (System.nanoTime() - buildTime) / 1000000;
             searcher.search(query, collector);
         }
@@ -748,6 +753,7 @@ public class Monitor implements Closeable {
      */
     protected Document buildIndexableQuery(String id, MonitorQuery mq, QueryCacheEntry query) {
         Document doc = presearcher.indexQuery(query.matchQuery, mq.getMetadata());
+        System.out.println("buildIndexableQuery : " + query.matchQuery);
         doc.add(new StringField(FIELDS.id, id, Field.Store.NO));
         doc.add(new StringField(FIELDS.del, id, Field.Store.NO));
         doc.add(new SortedDocValuesField(FIELDS.id, new BytesRef(id)));
@@ -768,6 +774,7 @@ public class Monitor implements Closeable {
 
         @Override
         protected void doMatch(int doc, String queryId, BytesRef hash) throws IOException {
+            System.out.println("MatchingCollector.doMatch : " + queryId + ":" + hash);
             try {
                 QueryCacheEntry entry = queries.get(hash);
                 if (entry != null)
