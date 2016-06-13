@@ -38,7 +38,7 @@ public class InputDocument {
 
     private static final FieldType FIELD_TYPE = new FieldType();
     static {
-        FIELD_TYPE.setStored(false);
+        FIELD_TYPE.setStored(true);
         FIELD_TYPE.setIndexOptions(IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS);
     }
 
@@ -60,6 +60,7 @@ public class InputDocument {
 
     // protected constructor - use a Builder to create objects
     protected InputDocument(String id, Document luceneDocument, PerFieldAnalyzerWrapper analyzers) {
+        if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("InputDocument constructor doc : " + luceneDocument);
         this.id = id;
         this.luceneDocument = luceneDocument;
         this.analyzers = analyzers;
@@ -98,6 +99,8 @@ public class InputDocument {
         private Map<String, Analyzer> analyzers = new HashMap<>();
         private Analyzer defaultAnalyzer = new KeywordAnalyzer();
 
+        private static float boostFactor = 100.0f;
+
         /**
          * Create a new Builder for an InputDocument with the given id
          * @param id the id of the InputDocument
@@ -130,7 +133,16 @@ public class InputDocument {
             checkFieldName(field);
             if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("Document : " + doc);
             if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("Builder addField : " + field + ":" + text);
-            doc.add(new Field(field, text, FIELD_TYPE));
+
+            Field f = new Field(field, text, FIELD_TYPE); 
+            f.setBoost(boostFactor);
+            if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("Field type : " + f.fieldType().toString());
+            
+            if (boostFactor > 1.0f) {
+                boostFactor /= 10.0f;
+            }
+            doc.add(f);
+
             if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("Document : " + doc);
             if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("Builder analyzers.put");
             analyzers.put(field, analyzer);
@@ -173,6 +185,7 @@ public class InputDocument {
             if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("InputDocument.build doc : " + doc);
             doc.add(new StringField(ID_FIELD, id, Field.Store.YES));
             PerFieldAnalyzerWrapper analyzerWrapper = new PerFieldAnalyzerWrapper(defaultAnalyzer, analyzers);
+            if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("analyzerWrapper created");
             return new InputDocument(id, doc, analyzerWrapper);
         }
 

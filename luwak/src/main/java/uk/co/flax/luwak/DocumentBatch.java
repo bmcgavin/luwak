@@ -34,6 +34,8 @@ import org.apache.lucene.analysis.tokenattributes.TermToBytesRefAttribute;
 import org.apache.lucene.analysis.tokenattributes.OffsetAttribute;
 import org.apache.lucene.search.BoostAttribute;
 import org.apache.lucene.analysis.miscellaneous.PerFieldAnalyzerWrapper;
+import org.apache.lucene.document.Document;
+import org.apache.lucene.index.IndexableField;
 
 /**
  * A collection of InputDocuments to be matched.
@@ -192,7 +194,7 @@ public abstract class DocumentBatch implements Closeable, Iterable<InputDocument
 
         MultiDocumentBatch(List<InputDocument> docs, Similarity similarity) {
             super(docs, similarity);
-            if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("MutiDocumentBatch");
+            if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("MultiDocumentBatch");
             assert docs.size() > 1;
             IndexWriterConfig iwc = new IndexWriterConfig(docs.get(0).getAnalyzers()).setSimilarity(similarity);
             try (IndexWriter writer = new IndexWriter(directory, iwc)) {
@@ -211,7 +213,12 @@ public abstract class DocumentBatch implements Closeable, Iterable<InputDocument
         private LeafReader build(IndexWriter writer) throws IOException {
 
             for (InputDocument doc : documents) {
-                writer.addDocument(doc.getDocument());
+                if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("About to add doc : " + doc.getDocument());
+                Document luceneDocument = doc.getDocument();
+                IndexableField f = luceneDocument.getField("text");
+                if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("got field : " + f);
+
+                writer.addDocument(luceneDocument);
             }
 
             writer.commit();
@@ -254,7 +261,7 @@ public abstract class DocumentBatch implements Closeable, Iterable<InputDocument
             try {
                 for (InputDocument doc : documents) {
                     for (IndexableField field : doc.getDocument()) {
-                        if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("Adding field : " + field.name() + ":" + doc);
+                        if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("Adding field : " + field.name() + ":" + doc.getDocument());
 
                         PerFieldAnalyzerWrapper analyzers = doc.getAnalyzers();
                         if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("Analyzers : " + analyzers);
