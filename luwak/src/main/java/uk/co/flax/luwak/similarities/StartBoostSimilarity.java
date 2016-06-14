@@ -18,16 +18,16 @@ public class StartBoostSimilarity extends DefaultSimilarity {
         // instead of also factoring in the field's length
         if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("HELLO I AM IN lengthNorm");
         if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("getAttributeSource : " + state.getAttributeSource());
-        Iterator<Class<? extends Attribute>> it = state.getAttributeSource().getAttributeClassesIterator();
-        Object O = null;
-        while (it.hasNext()) {
-            O = it.next();
-            if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("getAttributeSource.iterator : " + O);
+        if (state.getAttributeSource() != null) {
+            Iterator<Class<? extends Attribute>> it = state.getAttributeSource().getAttributeClassesIterator();
+            Object O = null;
+            while (it.hasNext()) {
+                O = it.next();
+                if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("getAttributeSource.iterator : " + O);
+            }
+            termAtt = state.getAttributeSource().getAttribute(CharTermAttribute.class);
+            if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("termAtt.length() : " + termAtt.length());
         }
-
-        termAtt = state.getAttributeSource().getAttribute(CharTermAttribute.class);
-        if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("termAtt.length() : " + termAtt.length());
-
         
         if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("getBoost : " + state.getBoost());
         if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("getLength : " + state.getLength());
