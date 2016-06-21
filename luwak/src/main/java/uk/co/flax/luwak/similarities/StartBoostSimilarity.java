@@ -89,4 +89,9 @@ public class StartBoostSimilarity extends DefaultSimilarity {
     if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("Hello I am in computePayloadFactor");
       return scorePayload(doc, start, end, payload);
   }
+
+  @Override
+  public String toString() {
+      return "StartBoostSimilarity";
+  }
 }

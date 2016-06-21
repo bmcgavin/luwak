@@ -87,11 +87,13 @@ public final class EarlyBoostingFilter extends TokenFilter {
     tokenPosition++;
     */
 
+	/*
     int tokenLength = offsetAtt.endOffset() - offsetAtt.startOffset();
     if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("token offset length " + tokenLength);
     if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("setting token offset to " + startOffset + ", " + (startOffset + tokenLength));
     offsetAtt.setOffset(startOffset, startOffset + tokenLength);
     startOffset += tokenLength;
+	*/
 
     return true;
   }

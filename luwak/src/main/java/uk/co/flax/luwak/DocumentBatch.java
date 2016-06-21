@@ -65,7 +65,8 @@ public abstract class DocumentBatch implements Closeable, Iterable<InputDocument
      * Create a DocumentBatch containing a single InputDocument
      */
     public static DocumentBatch of(InputDocument doc, Similarity sim) throws IOException {
-        return new DocumentBatch.Builder().add(doc).setSimilarity(sim).build();
+        if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("DB/of similarity : " + sim);
+        return new DocumentBatch.Builder().setSimilarity(sim).add(doc).build();
     }
  
     /**
@@ -86,7 +87,7 @@ public abstract class DocumentBatch implements Closeable, Iterable<InputDocument
      * Create a DocumentBatch containing a set of InputDocuments
      */
     public static DocumentBatch of(Collection<InputDocument> docs, Similarity sim) {
-        return new DocumentBatch.Builder().addAll(docs).setSimilarity(sim).build();
+        return new DocumentBatch.Builder().setSimilarity(sim).addAll(docs).build();
     }
 
     /**
@@ -125,6 +126,7 @@ public abstract class DocumentBatch implements Closeable, Iterable<InputDocument
 
         /** Set the {@link Similarity} to be used for scoring this batch */
         public Builder setSimilarity(Similarity similarity) {
+            if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("Setting similarity : " + similarity);
             this.similarity = similarity;
             return this;
         }
@@ -197,7 +199,10 @@ public abstract class DocumentBatch implements Closeable, Iterable<InputDocument
             if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("MultiDocumentBatch");
             assert docs.size() > 1;
             IndexWriterConfig iwc = new IndexWriterConfig(docs.get(0).getAnalyzers()).setSimilarity(similarity);
-            try (IndexWriter writer = new IndexWriter(directory, iwc)) {
+            IndexWriter writer = null;
+            try {
+                writer = new IndexWriter(directory, iwc);
+                if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("indexwriter's config's similarity : " + writer.getConfig().getSimilarity());
                 this.reader = build(writer);
             }
             catch (IOException e) {
@@ -258,6 +263,7 @@ public abstract class DocumentBatch implements Closeable, Iterable<InputDocument
             if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("SingletonDocumentBatch");
             assert documents.size() == 1;
             memoryindex.setSimilarity(similarity);
+            if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("memoryindex's similarity : " + similarity);
             try {
                 for (InputDocument doc : documents) {
                     for (IndexableField field : doc.getDocument()) {

@@ -28,18 +28,26 @@ import org.apache.lucene.analysis.miscellaneous.SetKeywordMarkerFilter;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.analysis.standard.StandardFilter;
 import org.apache.lucene.analysis.standard.StandardTokenizer;
+import org.apache.lucene.analysis.core.WhitespaceTokenizer;
 import org.apache.lucene.analysis.util.CharArraySet;
 import org.apache.lucene.analysis.util.StopwordAnalyzerBase;
 import org.apache.lucene.util.Version;
 import org.apache.lucene.analysis.en.EnglishPossessiveFilter;
 import org.apache.lucene.analysis.en.PorterStemFilter;
 
+import org.apache.lucene.analysis.payloads.PayloadEncoder;
+import org.apache.lucene.analysis.payloads.FloatEncoder;
+
 import uk.co.flax.luwak.analysis.EarlyBoostingFilter;
+import uk.co.flax.luwak.analysis.PercolatorDelimitedPayloadTokenFilter;
 
 /**
  * {@link Analyzer} for English.
  */
 public final class EarlyBoostingEnglishAnalyzer extends StopwordAnalyzerBase {
+
+  private PayloadEncoder encoder = new FloatEncoder();
+
   private final CharArraySet stemExclusionSet;
    
   /**
@@ -103,8 +111,9 @@ public final class EarlyBoostingEnglishAnalyzer extends StopwordAnalyzerBase {
   @Override
   protected TokenStreamComponents createComponents(String fieldName) {
     final Tokenizer source;
-    source = new StandardTokenizer();
+    source = new WhitespaceTokenizer();
     TokenStream result = new StandardFilter(source);
+    //result = new PercolatorDelimitedPayloadTokenFilter(result, '|', encoder);
     result = new EnglishPossessiveFilter(result);
     result = new LowerCaseFilter(result);
     result = new StopFilter(result, stopwords);
