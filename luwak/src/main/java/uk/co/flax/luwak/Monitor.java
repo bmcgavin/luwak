@@ -482,7 +482,10 @@ public class Monitor implements Closeable {
 
         for (MonitorQuery query : queries) {
             try {
+                if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("trying to decompose");
                 for (QueryCacheEntry queryCacheEntry : decomposeQuery(query)) {
+                    if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("queryCacheEntry : " + queryCacheEntry);
+                    if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("query : " + query);
                     updates.add(new Indexable(query.getId(), queryCacheEntry, buildIndexableQuery(query.getId(), query, queryCacheEntry)));
                 }
             } catch (Exception e) {
@@ -500,9 +503,12 @@ public class Monitor implements Closeable {
 
     private Iterable<QueryCacheEntry> decomposeQuery(MonitorQuery query) throws Exception {
 
+        if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("decomposeQuery.Query.start");
         Query q = queryParser.parse(query.getQuery(), query.getMetadata());
+        if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("decomposeQuery.Query : " + q);
 
         BytesRef rootHash = query.hash();
+
 
         int upto = 0;
         List<QueryCacheEntry> cacheEntries = new LinkedList<>();

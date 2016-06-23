@@ -52,6 +52,12 @@ public class LuceneQueryParser implements MonitorQueryParser {
 
     @Override
     public Query parse(String query, Map<String, String> metadata) throws Exception {
-        return new QueryParser(defaultField, analyzer).parse(query);
+        if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("LuceneQueryParser.parse : " + query);
+        if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("LuceneQueryParser.parse (analyzer) : " + analyzer);
+        QueryParser qp = new QueryParser(defaultField, analyzer);
+        if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("LuceneQueryParser.QueryParser : " + qp);
+        Query q = qp.parse(query);
+        if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("LuceneQueryParser.QueryParser.parse : " + q);
+        return q;
     }
 }
