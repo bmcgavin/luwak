@@ -17,6 +17,8 @@ import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.util.BytesRef;
+import org.apache.lucene.search.payloads.AveragePayloadFunction;
+import org.apache.lucene.search.payloads.PayloadScoreQuery;
 
 /*
  * Copyright (c) 2014 Lemur Consulting Ltd.
@@ -116,10 +118,12 @@ public class EarlyTermBoosterPresearcherComponent extends PresearcherComponent {
                 throw new IllegalArgumentException("Some documents in this batch do not have a term value of "
                                                     + field + ":" + Term.toString(term));
             if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("ETBPC term : " +  BytesRef.deepCopyOf(term));
-            tq = new TermQuery(new Term(field, BytesRef.deepCopyOf(term)));
+            //tq = new TermQuery(new Term(field, BytesRef.deepCopyOf(term)));
+			tq = new PayloadScoreQuery(new Term(field, BytesRef.deepCopyOf(term)), new AveragePayloadFunction());
             tq.setBoost((float)queryLength / (float)term.offset);
             //tq.setBoost(0.0f);
             bq.add(tq, BooleanClause.Occur.SHOULD);
+            if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("ETBPC bq : " +  bq);
         }
 
         BooleanQuery built = bq.build();
