@@ -101,6 +101,7 @@ public class PayloadTermsQuery extends Query implements Accountable {
    * can contain duplicate terms and multiple fields.
    */
   public PayloadTermsQuery(final List<Term> terms) {
+    if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("PTQ.construct : " + terms);
     Term[] sortedTerms = terms.toArray(new Term[terms.size()]);
     ArrayUtil.timSort(sortedTerms);
     PrefixCodedTerms.Builder builder = new PrefixCodedTerms.Builder();
@@ -142,7 +143,7 @@ public class PayloadTermsQuery extends Query implements Accountable {
 
   @Override
   public Query rewrite(IndexReader reader) throws IOException {
-    System.out.println("PayloadTermsQuery : rewrite");
+    System.out.println("PTQ : rewrite");
     final int threshold = Math.min(BOOLEAN_REWRITE_TERM_COUNT_THRESHOLD, BooleanQuery.getMaxClauseCount());
     if (termData.size() <= threshold) {
       BooleanQuery.Builder bq = new BooleanQuery.Builder();
@@ -159,7 +160,7 @@ public class PayloadTermsQuery extends Query implements Accountable {
 
   @Override
   public boolean equals(Object obj) {
-    System.out.println("PayloadTermsQuery : equals");
+    System.out.println("PTQ : equals");
     if (this == obj) {
       return true;
     }
@@ -240,7 +241,7 @@ public class PayloadTermsQuery extends Query implements Accountable {
 
   @Override
   public Weight createWeight(final IndexSearcher searcher, final boolean needsScores) throws IOException {
-    System.out.println("PayloadTermsQuery : createWeight");
+    System.out.println("PTQ.createWeight");
     return new ConstantScoreWeight(this) {
 
       @Override
@@ -256,6 +257,7 @@ public class PayloadTermsQuery extends Query implements Accountable {
        * there are few matching terms, or build a bitset containing matching docs.
        */
       private WeightOrDocIdSet rewrite(LeafReaderContext context) throws IOException {
+        if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("PTQ.rewrite : " + context);
         final LeafReader reader = context.reader();
 
         // We will first try to collect up to 'threshold' terms into 'matchingTerms'
@@ -322,6 +324,7 @@ public class PayloadTermsQuery extends Query implements Accountable {
       }
 
       private Scorer scorer(DocIdSet set) throws IOException {
+        if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("PTQ.scorer : " + set);
         if (set == null) {
           return null;
         }

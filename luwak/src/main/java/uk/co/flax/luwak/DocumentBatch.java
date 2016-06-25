@@ -171,6 +171,7 @@ public abstract class DocumentBatch implements Closeable, Iterable<InputDocument
      */
     public IndexSearcher getSearcher() throws IOException {
         IndexSearcher searcher = new IndexSearcher(getIndexReader());
+        if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("DocumentBatch.similarity : " + similarity);
         searcher.setSimilarity(similarity);
         return searcher;
     }

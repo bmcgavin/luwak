@@ -308,6 +308,7 @@ public class Monitor implements Closeable {
                 MonitorQuery mq = MonitorQuery.deserialize(serializedMQ);
                 try {
                     for (QueryCacheEntry ce : decomposeQuery(mq)) {
+                        if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("Monitor.MonitorQueryCollector.doMatch.QueryCacheEntry : " + ce);
                         queries.put(ce.hash, ce);
                     }
                 } catch (Exception e) {
@@ -500,7 +501,11 @@ public class Monitor implements Closeable {
 
     private Iterable<QueryCacheEntry> decomposeQuery(MonitorQuery query) throws Exception {
 
-        Query q = queryParser.parse(query.getQuery(), query.getMetadata());
+        if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("Monitor.decomposeQuery : " + query.getQuery());
+        //TODO HELLO FUTURE RICH THIS IS WHERE YOU BUILD THE
+        // SPAN QUERY
+        Query q = quryParser.parse(query.getQuery(), query.getMetadata());
+        if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("Monitor.decomposeQuery.q : " + q);
 
         BytesRef rootHash = query.hash();
 
@@ -777,8 +782,10 @@ public class Monitor implements Closeable {
             if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("MatchingCollector.doMatch : " + queryId + ":" + hash);
             try {
                 QueryCacheEntry entry = queries.get(hash);
-                if (entry != null)
+                if (entry != null) {
+                    if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("MatchingCollector.doMatch.entry : " + entry.matchQuery);
                     matcher.matchQuery(queryId, entry.matchQuery, entry.metadata);
+                }
             }
             catch (Exception e) {
                 matcher.reportError(new MatchError(queryId, e));
