@@ -48,7 +48,7 @@ public class ExplainingMatcher extends CandidateMatcher<ExplainingMatch> {
         int maxDocs = docs.getIndexReader().maxDoc();
         for (int i = 0; i < maxDocs; i++) {
             Explanation explanation = docs.getSearcher().explain(matchQuery, i);
-            if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("ExplainingMatcher.doMatchQuery, Checking : " + matchQuery);
+            if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("ExplainingMatcher.doMatchQuery, Checking HEY HOW IS THIS BUILT: " + matchQuery);
             if (explanation.isMatch()) {
                 if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("ExplainingMatcher.doMatchQuery, Adding : " + docs.resolveDocId(i));
                 addMatch(new ExplainingMatch(queryId, docs.resolveDocId(i), explanation));

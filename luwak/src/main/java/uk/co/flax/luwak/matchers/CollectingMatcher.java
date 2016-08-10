@@ -94,11 +94,13 @@ public abstract class CollectingMatcher<T extends QueryMatch> extends CandidateM
 
             @Override
             public void setScorer(Scorer scorer) throws IOException {
+                if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("MatchLeafCollecter.setScorer : " + scorer);
                 MatchCollector.this.scorer = scorer;
             }
 
             @Override
             public void collect(int doc) throws IOException {
+                if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("Scorer in collect : " + scorer);
                 match = doMatch(queryId, docs.resolveDocId(doc), scorer);
                 if (match != null)
                     addMatch(match);
