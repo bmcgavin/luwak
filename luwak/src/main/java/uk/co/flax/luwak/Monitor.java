@@ -504,7 +504,7 @@ public class Monitor implements Closeable {
         if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("Monitor.decomposeQuery : " + query.getQuery());
         //TODO HELLO FUTURE RICH THIS IS WHERE YOU BUILD THE
         // SPAN QUERY
-        Query q = quryParser.parse(query.getQuery(), query.getMetadata());
+        Query q = queryParser.parse(query.getQuery(), query.getMetadata());
         if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("Monitor.decomposeQuery.q : " + q);
 
         BytesRef rootHash = query.hash();
@@ -639,6 +639,8 @@ public class Monitor implements Closeable {
             Query query = presearcher.buildQuery(matcher.getIndexReader(), termFilter);
             if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("Query : " + query);
             buildTime = (System.nanoTime() - buildTime) / 1000000;
+			searcher.setSimilarity(new StartBoostSimilarity());
+            if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("Similarity : " + searcher.getSimilarity(true));
             searcher.search(query, collector);
         }
         finally {
@@ -652,6 +654,8 @@ public class Monitor implements Closeable {
         IndexSearcher searcher = null;
         try {
             searcher = getSearcher(collector);
+			searcher.setSimilarity(new StartBoostSimilarity());
+            if (System.getProperty("luwak.debug", "false").equals("true")) System.out.println("In the Private match func : " + searcher.getSimilarity(true));
             searcher.search(query, collector);
         }
         finally {
